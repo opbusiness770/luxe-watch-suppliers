@@ -27,3 +27,6 @@ Thumbs.db
 # Prisma / local databases
 *.db
 *.db-journal
+
+# Prisma generated client
+server/src/generated/prisma/
