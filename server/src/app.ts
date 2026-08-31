@@ -13,6 +13,8 @@ import watchRoutes from "./routes/watch.routes.js";
 import allocationRoutes from "./routes/allocation.routes.js";
 import saleRoutes from "./routes/sale.routes.js";
 import supplierInventoryRoutes from "./routes/supplier-inventory.routes.js";
+import adminSaleRoutes from "./routes/admin-sale.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 const app = express();
 
@@ -68,6 +70,20 @@ app.use(
   requireAuth,
   requireSupplier,
   saleRoutes,
+);
+
+app.use(
+  "/api/admin/sales",
+  requireAuth,
+  requireAdmin,
+  adminSaleRoutes,
+);
+
+app.use(
+  "/api/admin/dashboard",
+  requireAuth,
+  requireAdmin,
+  dashboardRoutes,
 );
 
 export default app;
