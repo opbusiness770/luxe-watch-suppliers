@@ -8,9 +8,10 @@ import AdminLayout from "./layouts/AdminLayout";
 import SupplierLayout from "./layouts/SupplierLayout";
 
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminSalesPage from "./pages/admin/AdminSalesPage";
+import AllocationsPage from "./pages/admin/AllocationsPage";
 import SuppliersPage from "./pages/admin/SuppliersPage";
 import WatchesPage from "./pages/admin/WatchesPage";
-import AllocationsPage from "./pages/admin/AllocationsPage";
 
 import LoginPage from "./pages/auth/LoginPage";
 
@@ -83,6 +84,13 @@ export default function App() {
           path="allocations"
           element={
             <AllocationsPage />
+          }
+        />
+
+        <Route
+          path="sales"
+          element={
+            <AdminSalesPage />
           }
         />
       </Route>
