@@ -8,6 +8,7 @@ import {
 
 import authRoutes from "./routes/auth.routes.js";
 import supplierRoutes from "./routes/supplier.routes.js";
+import watchRoutes from "./routes/watch.routes.js";
 
 const app = express();
 
@@ -35,6 +36,13 @@ app.use(
   requireAuth,
   requireAdmin,
   supplierRoutes,
+);
+
+app.use(
+  "/api/admin/watches",
+  requireAuth,
+  requireAdmin,
+  watchRoutes,
 );
 
 export default app;
