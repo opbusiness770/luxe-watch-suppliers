@@ -11,16 +11,16 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
 
+import HomeRedirect from "./routes/HomeRedirect";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
 export default function App() {
   return (
     <Routes>
       <Route
         path="/"
         element={
-          <Navigate
-            to="/login"
-            replace
-          />
+          <HomeRedirect />
         }
       />
 
@@ -31,7 +31,15 @@ export default function App() {
 
       <Route
         path="/admin"
-        element={<AdminLayout />}
+        element={
+          <ProtectedRoute
+            allowedRoles={[
+              "ADMIN",
+            ]}
+          >
+            <AdminLayout />
+          </ProtectedRoute>
+        }
       >
         <Route
           index
@@ -54,7 +62,13 @@ export default function App() {
       <Route
         path="/supplier"
         element={
-          <SupplierLayout />
+          <ProtectedRoute
+            allowedRoles={[
+              "SUPPLIER",
+            ]}
+          >
+            <SupplierLayout />
+          </ProtectedRoute>
         }
       >
         <Route
@@ -78,10 +92,7 @@ export default function App() {
       <Route
         path="*"
         element={
-          <Navigate
-            to="/login"
-            replace
-          />
+          <HomeRedirect />
         }
       />
     </Routes>

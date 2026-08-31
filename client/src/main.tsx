@@ -23,6 +23,10 @@ import {
   theme,
 } from "./theme/theme";
 
+import {
+  AuthProvider,
+} from "./context/AuthContext";
+
 createRoot(
   document.getElementById("root")!,
 ).render(
@@ -32,7 +36,9 @@ createRoot(
         <CssBaseline />
 
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
     </CacheProvider>
