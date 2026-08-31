@@ -15,6 +15,7 @@ import saleRoutes from "./routes/sale.routes.js";
 import supplierInventoryRoutes from "./routes/supplier-inventory.routes.js";
 import adminSaleRoutes from "./routes/admin-sale.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import supplierDashboardRoutes from "./routes/supplier-dashboard.routes.js";
 
 const app = express();
 
@@ -84,6 +85,13 @@ app.use(
   requireAuth,
   requireAdmin,
   dashboardRoutes,
+);
+
+app.use(
+  "/api/supplier/dashboard",
+  requireAuth,
+  requireSupplier,
+  supplierDashboardRoutes,
 );
 
 export default app;
