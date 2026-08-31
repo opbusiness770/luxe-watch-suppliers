@@ -9,6 +9,7 @@ import SupplierLayout from "./layouts/SupplierLayout";
 
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import SuppliersPage from "./pages/admin/SuppliersPage";
+import WatchesPage from "./pages/admin/WatchesPage";
 
 import LoginPage from "./pages/auth/LoginPage";
 
@@ -67,6 +68,13 @@ export default function App() {
           path="suppliers"
           element={
             <SuppliersPage />
+          }
+        />
+
+        <Route
+          path="watches"
+          element={
+            <WatchesPage />
           }
         />
       </Route>
