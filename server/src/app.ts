@@ -4,12 +4,15 @@ import express from "express";
 import {
   requireAdmin,
   requireAuth,
+  requireSupplier,
 } from "./middleware/auth.middleware.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import supplierRoutes from "./routes/supplier.routes.js";
 import watchRoutes from "./routes/watch.routes.js";
 import allocationRoutes from "./routes/allocation.routes.js";
+import saleRoutes from "./routes/sale.routes.js";
+import supplierInventoryRoutes from "./routes/supplier-inventory.routes.js";
 
 const app = express();
 
@@ -51,6 +54,20 @@ app.use(
   requireAuth,
   requireAdmin,
   allocationRoutes,
+);
+
+app.use(
+  "/api/supplier/inventory",
+  requireAuth,
+  requireSupplier,
+  supplierInventoryRoutes,
+);
+
+app.use(
+  "/api/supplier/sales",
+  requireAuth,
+  requireSupplier,
+  saleRoutes,
 );
 
 export default app;
