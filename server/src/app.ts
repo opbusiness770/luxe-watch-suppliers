@@ -9,6 +9,7 @@ import {
 import authRoutes from "./routes/auth.routes.js";
 import supplierRoutes from "./routes/supplier.routes.js";
 import watchRoutes from "./routes/watch.routes.js";
+import allocationRoutes from "./routes/allocation.routes.js";
 
 const app = express();
 
@@ -43,6 +44,13 @@ app.use(
   requireAuth,
   requireAdmin,
   watchRoutes,
+);
+
+app.use(
+  "/api/admin/allocations",
+  requireAuth,
+  requireAdmin,
+  allocationRoutes,
 );
 
 export default app;
