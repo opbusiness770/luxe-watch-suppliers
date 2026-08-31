@@ -15,14 +15,25 @@ import {
   useAuth,
 } from "../context/AuthContext";
 
-const activeMenuItems = [
+const menuItems = [
   {
     label: "לוח בקרה",
     to: "/supplier/dashboard",
   },
+
   {
     label: "המלאי שלי",
     to: "/supplier/inventory",
+  },
+
+  {
+    label: "דיווח מכירה",
+    to: "/supplier/new-sale",
+  },
+
+  {
+    label: "היסטוריית מכירות",
+    to: "/supplier/sales",
   },
 ];
 
@@ -111,17 +122,25 @@ export default function SupplierLayout() {
           component="nav"
           sx={{
             display: "flex",
+
             flexDirection:
               "column",
+
             gap: 0.75,
           }}
         >
-          {activeMenuItems.map(
+          {menuItems.map(
             (item) => (
               <Box
-                key={item.to}
-                component={NavLink}
-                to={item.to}
+                key={
+                  item.to
+                }
+                component={
+                  NavLink
+                }
+                to={
+                  item.to
+                }
                 sx={{
                   display:
                     "block",
@@ -129,7 +148,8 @@ export default function SupplierLayout() {
                   px: 2,
                   py: 1.25,
 
-                  borderRadius: 2,
+                  borderRadius:
+                    2,
 
                   color:
                     "text.primary",
@@ -164,34 +184,6 @@ export default function SupplierLayout() {
               </Box>
             ),
           )}
-
-          <Typography
-            sx={{
-              px: 2,
-              py: 1.25,
-
-              color:
-                "text.secondary",
-
-              opacity: 0.65,
-            }}
-          >
-            דיווח מכירה
-          </Typography>
-
-          <Typography
-            sx={{
-              px: 2,
-              py: 1.25,
-
-              color:
-                "text.secondary",
-
-              opacity: 0.65,
-            }}
-          >
-            היסטוריית מכירות
-          </Typography>
         </Box>
 
         <Box

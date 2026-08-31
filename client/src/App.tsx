@@ -15,8 +15,10 @@ import WatchesPage from "./pages/admin/WatchesPage";
 
 import LoginPage from "./pages/auth/LoginPage";
 
+import NewSalePage from "./pages/supplier/NewSalePage";
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
 import SupplierInventoryPage from "./pages/supplier/SupplierInventoryPage";
+import SupplierSalesPage from "./pages/supplier/SupplierSalesPage";
 
 import HomeRedirect from "./routes/HomeRedirect";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -129,6 +131,20 @@ export default function App() {
           path="inventory"
           element={
             <SupplierInventoryPage />
+          }
+        />
+
+        <Route
+          path="new-sale"
+          element={
+            <NewSalePage />
+          }
+        />
+
+        <Route
+          path="sales"
+          element={
+            <SupplierSalesPage />
           }
         />
       </Route>
