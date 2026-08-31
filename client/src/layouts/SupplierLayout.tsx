@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 
 import {
+  NavLink,
   Outlet,
   useNavigate,
 } from "react-router-dom";
@@ -14,20 +15,35 @@ import {
   useAuth,
 } from "../context/AuthContext";
 
+const activeMenuItems = [
+  {
+    label: "לוח בקרה",
+    to: "/supplier/dashboard",
+  },
+  {
+    label: "המלאי שלי",
+    to: "/supplier/inventory",
+  },
+];
+
 export default function SupplierLayout() {
   const {
     user,
     logout,
   } = useAuth();
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   async function handleLogout() {
     await logout();
 
-    navigate("/login", {
-      replace: true,
-    });
+    navigate(
+      "/login",
+      {
+        replace: true,
+      },
+    );
   }
 
   return (
@@ -37,7 +53,6 @@ export default function SupplierLayout() {
         minHeight: "100vh",
       }}
     >
-      {/* Sidebar */}
       <Box
         component="aside"
         sx={{
@@ -47,21 +62,29 @@ export default function SupplierLayout() {
 
           bgcolor: "#FFFFFF",
 
-          borderLeft: "1px solid",
-          borderColor: "divider",
+          borderLeft:
+            "1px solid",
+
+          borderColor:
+            "divider",
 
           p: 3,
 
           display: "flex",
-          flexDirection: "column",
 
-          boxSizing: "border-box",
+          flexDirection:
+            "column",
+
+          boxSizing:
+            "border-box",
         }}
       >
         <Typography
           variant="h6"
           sx={{
-            color: "primary.main",
+            color:
+              "primary.main",
+
             letterSpacing: 1,
           }}
         >
@@ -84,38 +107,93 @@ export default function SupplierLayout() {
           }}
         />
 
-        {/* Navigation */}
-        <Box>
-          <Typography>
-            לוח בקרה
-          </Typography>
+        <Box
+          component="nav"
+          sx={{
+            display: "flex",
+            flexDirection:
+              "column",
+            gap: 0.75,
+          }}
+        >
+          {activeMenuItems.map(
+            (item) => (
+              <Box
+                key={item.to}
+                component={NavLink}
+                to={item.to}
+                sx={{
+                  display:
+                    "block",
+
+                  px: 2,
+                  py: 1.25,
+
+                  borderRadius: 2,
+
+                  color:
+                    "text.primary",
+
+                  textDecoration:
+                    "none",
+
+                  transition:
+                    "background-color 150ms ease, color 150ms ease",
+
+                  "&:hover": {
+                    bgcolor:
+                      "#F7F4EE",
+
+                    color:
+                      "primary.dark",
+                  },
+
+                  "&.active": {
+                    bgcolor:
+                      "#F3EDE2",
+
+                    color:
+                      "primary.dark",
+
+                    fontWeight:
+                      600,
+                  },
+                }}
+              >
+                {item.label}
+              </Box>
+            ),
+          )}
 
           <Typography
             sx={{
-              mt: 2,
+              px: 2,
+              py: 1.25,
+
+              color:
+                "text.secondary",
+
+              opacity: 0.65,
             }}
           >
-            המלאי שלי
+            דיווח מכירה
           </Typography>
 
           <Typography
             sx={{
-              mt: 2,
-            }}
-          >
-            מכירות
-          </Typography>
+              px: 2,
+              py: 1.25,
 
-          <Typography
-            sx={{
-              mt: 2,
+              color:
+                "text.secondary",
+
+              opacity: 0.65,
             }}
           >
             היסטוריית מכירות
           </Typography>
         </Box>
 
-        {/* User + Logout */}
         <Box
           sx={{
             mt: "auto",
@@ -134,25 +212,33 @@ export default function SupplierLayout() {
             color="text.secondary"
             sx={{
               mb: 1.5,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+
+              overflow:
+                "hidden",
+
+              textOverflow:
+                "ellipsis",
+
+              whiteSpace:
+                "nowrap",
             }}
           >
-            מחובר כ־{user?.username}
+            מחובר כ־
+            {user?.username}
           </Typography>
 
           <Button
             variant="outlined"
             fullWidth
-            onClick={handleLogout}
+            onClick={
+              handleLogout
+            }
           >
             התנתקות
           </Button>
         </Box>
       </Box>
 
-      {/* Main content */}
       <Box
         component="main"
         sx={{

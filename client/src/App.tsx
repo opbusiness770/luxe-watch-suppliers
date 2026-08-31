@@ -16,6 +16,7 @@ import WatchesPage from "./pages/admin/WatchesPage";
 import LoginPage from "./pages/auth/LoginPage";
 
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
+import SupplierInventoryPage from "./pages/supplier/SupplierInventoryPage";
 
 import HomeRedirect from "./routes/HomeRedirect";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -121,6 +122,13 @@ export default function App() {
           path="dashboard"
           element={
             <SupplierDashboardPage />
+          }
+        />
+
+        <Route
+          path="inventory"
+          element={
+            <SupplierInventoryPage />
           }
         />
       </Route>
