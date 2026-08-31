@@ -10,6 +10,7 @@ import SupplierLayout from "./layouts/SupplierLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import SuppliersPage from "./pages/admin/SuppliersPage";
 import WatchesPage from "./pages/admin/WatchesPage";
+import AllocationsPage from "./pages/admin/AllocationsPage";
 
 import LoginPage from "./pages/auth/LoginPage";
 
@@ -75,6 +76,13 @@ export default function App() {
           path="watches"
           element={
             <WatchesPage />
+          }
+        />
+
+        <Route
+          path="allocations"
+          element={
+            <AllocationsPage />
           }
         />
       </Route>
