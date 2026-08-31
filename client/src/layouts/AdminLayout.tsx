@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 
 import {
+  NavLink,
   Outlet,
   useNavigate,
 } from "react-router-dom";
@@ -13,6 +14,29 @@ import {
 import {
   useAuth,
 } from "../context/AuthContext";
+
+const menuItems = [
+  {
+    label: "לוח בקרה",
+    to: "/admin/dashboard",
+  },
+  {
+    label: "ספקים",
+    to: "/admin/suppliers",
+  },
+  {
+    label: "שעונים",
+    to: "/admin/watches",
+  },
+  {
+    label: "הקצאות מלאי",
+    to: "/admin/allocations",
+  },
+  {
+    label: "מכירות",
+    to: "/admin/sales",
+  },
+];
 
 export default function AdminLayout() {
   const {
@@ -45,20 +69,33 @@ export default function AdminLayout() {
         component="aside"
         sx={{
           width: 250,
+          minWidth: 250,
           flexShrink: 0,
+
           bgcolor: "#FFFFFF",
-          borderLeft: "1px solid",
-          borderColor: "divider",
+
+          borderLeft:
+            "1px solid",
+
+          borderColor:
+            "divider",
+
           p: 3,
 
           display: "flex",
-          flexDirection: "column",
+          flexDirection:
+            "column",
+
+          boxSizing:
+            "border-box",
         }}
       >
         <Typography
           variant="h6"
           sx={{
-            color: "primary.main",
+            color:
+              "primary.main",
+
             letterSpacing: 1,
           }}
         >
@@ -81,46 +118,70 @@ export default function AdminLayout() {
           }}
         />
 
-        <Typography>
-          לוח בקרה
-        </Typography>
-
-        <Typography
+        <Box
+          component="nav"
           sx={{
-            mt: 2,
+            display: "flex",
+            flexDirection:
+              "column",
+            gap: 0.75,
           }}
         >
-          ספקים
-        </Typography>
+          {menuItems.map(
+            (item) => (
+              <Box
+                key={item.to}
+                component={NavLink}
+                to={item.to}
+                sx={{
+                  display:
+                    "block",
 
-        <Typography
-          sx={{
-            mt: 2,
-          }}
-        >
-          שעונים
-        </Typography>
+                  px: 2,
+                  py: 1.25,
 
-        <Typography
-          sx={{
-            mt: 2,
-          }}
-        >
-          הקצאות מלאי
-        </Typography>
+                  borderRadius: 2,
 
-        <Typography
-          sx={{
-            mt: 2,
-          }}
-        >
-          מכירות
-        </Typography>
+                  color:
+                    "text.primary",
+
+                  textDecoration:
+                    "none",
+
+                  transition:
+                    "background-color 150ms ease, color 150ms ease",
+
+                  "&:hover": {
+                    bgcolor:
+                      "#F7F4EE",
+
+                    color:
+                      "primary.dark",
+                  },
+
+                  "&.active": {
+                    bgcolor:
+                      "#F3EDE2",
+
+                    color:
+                      "primary.dark",
+
+                    fontWeight:
+                      600,
+                  },
+                }}
+              >
+                {item.label}
+              </Box>
+            ),
+          )}
+        </Box>
 
         <Box
           sx={{
             mt: "auto",
             pt: 4,
+            width: "100%",
           }}
         >
           <Divider
@@ -134,15 +195,27 @@ export default function AdminLayout() {
             color="text.secondary"
             sx={{
               mb: 1.5,
+
+              overflow:
+                "hidden",
+
+              textOverflow:
+                "ellipsis",
+
+              whiteSpace:
+                "nowrap",
             }}
           >
-            מחובר כ־{user?.username}
+            מחובר כ־
+            {user?.username}
           </Typography>
 
           <Button
             variant="outlined"
             fullWidth
-            onClick={handleLogout}
+            onClick={
+              handleLogout
+            }
           >
             התנתקות
           </Button>
@@ -153,6 +226,8 @@ export default function AdminLayout() {
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
+
           p: {
             xs: 2,
             md: 4,

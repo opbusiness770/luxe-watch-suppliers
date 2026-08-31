@@ -8,7 +8,10 @@ import AdminLayout from "./layouts/AdminLayout";
 import SupplierLayout from "./layouts/SupplierLayout";
 
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import SuppliersPage from "./pages/admin/SuppliersPage";
+
 import LoginPage from "./pages/auth/LoginPage";
+
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
 
 import HomeRedirect from "./routes/HomeRedirect";
@@ -26,7 +29,9 @@ export default function App() {
 
       <Route
         path="/login"
-        element={<LoginPage />}
+        element={
+          <LoginPage />
+        }
       />
 
       <Route
@@ -55,6 +60,13 @@ export default function App() {
           path="dashboard"
           element={
             <AdminDashboardPage />
+          }
+        />
+
+        <Route
+          path="suppliers"
+          element={
+            <SuppliersPage />
           }
         />
       </Route>
