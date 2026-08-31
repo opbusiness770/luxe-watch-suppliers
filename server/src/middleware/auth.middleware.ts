@@ -79,3 +79,21 @@ export function requireAdmin(
 
   next();
 }
+
+export function requireSupplier(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (
+    req.authUser?.role !== "SUPPLIER" ||
+    !req.authUser.supplierId
+  ) {
+    res.status(403).json({
+      message: "אין לך הרשאה לבצע פעולה זו",
+    });
+    return;
+  }
+
+  next();
+}
