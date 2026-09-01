@@ -2,6 +2,12 @@ import cookieParser from "cookie-parser";
 
 import express from "express";
 
+import path from "node:path";
+
+import {
+  fileURLToPath,
+} from "node:url";
+
 import {
   requireAdmin,
   requireAuth,
@@ -30,6 +36,22 @@ import uploadRoutes from "./routes/upload.routes.js";
 
 const app =
   express();
+
+const currentFilePath =
+  fileURLToPath(
+    import.meta.url,
+  );
+
+const currentDirectory =
+  path.dirname(
+    currentFilePath,
+  );
+
+const clientDistPath =
+  path.resolve(
+    currentDirectory,
+    "../../client/dist",
+  );
 
 app.disable(
   "x-powered-by",
@@ -132,5 +154,59 @@ app.use(
   requireSupplier,
   supplierDashboardRoutes,
 );
+
+/*
+ * Any request that starts with /api and did not
+ * match one of the routes above is an API 404.
+ *
+ * This must come before the React SPA fallback,
+ * otherwise a missing API route could accidentally
+ * receive index.html.
+ */
+app.use(
+  "/api",
+  (_req, res) => {
+    res.status(404).json({
+      message:
+        "API route not found",
+    });
+  },
+);
+
+/*
+ * In production, Express serves the Vite build.
+ *
+ * This keeps the React frontend and the API on the
+ * same origin, so the HttpOnly authentication cookie
+ * can be used without cross-origin CORS handling.
+ */
+if (
+  process.env.NODE_ENV ===
+  "production"
+) {
+  app.use(
+    express.static(
+      clientDistPath,
+    ),
+  );
+
+  /*
+   * React Router SPA fallback.
+   *
+   * Express 5 requires a named wildcard.
+   * /{*splat} also matches the root path.
+   */
+  app.get(
+    "/{*splat}",
+    (_req, res) => {
+      res.sendFile(
+        path.join(
+          clientDistPath,
+          "index.html",
+        ),
+      );
+    },
+  );
+}
 
 export default app;
