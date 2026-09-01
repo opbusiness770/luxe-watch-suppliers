@@ -6,7 +6,45 @@ export type SaleStatus =
   | "COMPLETED"
   | "CANCELLED";
 
-export type AdminSaleItem = {
+/*
+ * Watch information returned inside
+ * historical sales.
+ *
+ * deletedAt allows the UI to indicate that
+ * the watch was removed from the catalog
+ * after the sale took place.
+ */
+export type AdminSaleWatch = {
+  id: string;
+
+  brand: string;
+  model: string;
+  name: string;
+
+  imageUrl: string | null;
+  imageUrls: string[];
+
+  deletedAt: string | null;
+};
+
+/*
+ * Sale item returned in the Admin sales list.
+ */
+export type AdminSaleListItemWatch = {
+  quantity: number;
+
+  salePrice:
+    SaleMoneyValue;
+
+  watch:
+    AdminSaleWatch;
+};
+
+/*
+ * Sale item returned when opening
+ * the full sale details.
+ */
+export type AdminSaleDetailsItem = {
   id: string;
 
   quantity: number;
@@ -17,19 +55,18 @@ export type AdminSaleItem = {
   supplierCostPrice:
     SaleMoneyValue;
 
-  watch: {
-    id: string;
-    sku: string;
-    brand: string;
-    model: string;
-    name: string;
-  };
+  watch:
+    AdminSaleWatch;
 };
 
+/*
+ * One sale in the Admin sales list.
+ */
 export type AdminSaleListItem = {
   id: string;
 
-  status: SaleStatus;
+  status:
+    SaleStatus;
 
   totalAmount:
     SaleMoneyValue;
@@ -42,36 +79,63 @@ export type AdminSaleListItem = {
 
   supplier: {
     id: string;
-    companyName: string;
-    contactName?: string;
-
-    user?: {
-      username: string;
-    };
+    contactName: string;
   };
 
-  items: AdminSaleItem[];
+  items:
+    AdminSaleListItemWatch[];
 };
 
-export type AdminSaleDetails =
-  AdminSaleListItem & {
-    createdAt?: string;
-    updatedAt?: string;
+/*
+ * Full details for one sale.
+ */
+export type AdminSaleDetails = {
+  id: string;
 
-    supplier: {
-      id: string;
-      companyName: string;
-      contactName?: string;
+  status:
+    SaleStatus;
 
-      user?: {
-        username: string;
-        email?: string | null;
-      };
+  totalAmount:
+    SaleMoneyValue;
+
+  soldAt: string;
+
+  notes:
+    | string
+    | null;
+
+  createdAt: string;
+  updatedAt: string;
+
+  supplier: {
+    id: string;
+
+    contactName:
+      string;
+
+    phone:
+      | string
+      | null;
+
+    user: {
+      username: string;
+
+      email:
+        | string
+        | null;
+
+      isActive:
+        boolean;
     };
   };
 
+  items:
+    AdminSaleDetailsItem[];
+};
+
 export type AdminSalesResponse = {
-  sales: AdminSaleListItem[];
+  sales:
+    AdminSaleListItem[];
 
   pagination: {
     page: number;
@@ -82,5 +146,6 @@ export type AdminSalesResponse = {
 };
 
 export type AdminSaleResponse = {
-  sale: AdminSaleDetails;
+  sale:
+    AdminSaleDetails;
 };

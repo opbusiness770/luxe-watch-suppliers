@@ -1,13 +1,20 @@
-import { UserRole } from "../generated/prisma/client.js";
-import { hashPassword } from "../lib/password.js";
-import { prisma } from "../lib/prisma.js";
+import {
+  UserRole,
+} from "../generated/prisma/client.js";
+
+import {
+  hashPassword,
+} from "../lib/password.js";
+
+import {
+  prisma,
+} from "../lib/prisma.js";
 
 export type CreateSupplierInput = {
   username: string;
   email?: string | null;
   password: string;
 
-  companyName: string;
   contactName: string;
   phone?: string | null;
   address?: string | null;
@@ -16,39 +23,61 @@ export type CreateSupplierInput = {
 
 export type UpdateSupplierInput = {
   email?: string | null;
-  companyName?: string;
+
   contactName?: string;
   phone?: string | null;
   address?: string | null;
   notes?: string | null;
 };
 
+/*
+ * Returns all suppliers.
+ *
+ * Search is performed by:
+ * - Contact name
+ * - Username
+ * - Email
+ */
 export async function getSuppliers(
   search?: string,
 ) {
-  const normalizedSearch = search?.trim();
+  const normalizedSearch =
+    search?.trim();
 
   return prisma.supplier.findMany({
     where: normalizedSearch
       ? {
           OR: [
             {
-              companyName: {
-                contains: normalizedSearch,
-                mode: "insensitive",
-              },
-            },
-            {
               contactName: {
-                contains: normalizedSearch,
-                mode: "insensitive",
+                contains:
+                  normalizedSearch,
+
+                mode:
+                  "insensitive",
               },
             },
+
             {
               user: {
                 username: {
-                  contains: normalizedSearch,
-                  mode: "insensitive",
+                  contains:
+                    normalizedSearch,
+
+                  mode:
+                    "insensitive",
+                },
+              },
+            },
+
+            {
+              user: {
+                email: {
+                  contains:
+                    normalizedSearch,
+
+                  mode:
+                    "insensitive",
                 },
               },
             },
@@ -58,10 +87,11 @@ export async function getSuppliers(
 
     select: {
       id: true,
-      companyName: true,
+
       contactName: true,
       phone: true,
       address: true,
+
       createdAt: true,
 
       user: {
@@ -86,6 +116,15 @@ export async function getSuppliers(
   });
 }
 
+/*
+ * Returns one supplier with current inventory.
+ *
+ * Watches that were soft-deleted are not returned
+ * as part of the supplier's current inventory view.
+ *
+ * Historical sales and allocations remain stored
+ * separately and are not deleted.
+ */
 export async function getSupplierById(
   supplierId: string,
 ) {
@@ -96,11 +135,12 @@ export async function getSupplierById(
 
     select: {
       id: true,
-      companyName: true,
+
       contactName: true,
       phone: true,
       address: true,
       notes: true,
+
       createdAt: true,
       updatedAt: true,
 
@@ -115,19 +155,33 @@ export async function getSupplierById(
       },
 
       inventories: {
+        where: {
+          watch: {
+            deletedAt: null,
+          },
+        },
+
         select: {
           quantityOnHand: true,
-          supplierCostPrice: true,
-          requiredSalePrice: true,
+
+          supplierCostPrice:
+            true,
+
+          requiredSalePrice:
+            true,
 
           watch: {
             select: {
               id: true,
-              sku: true,
+
               brand: true,
               model: true,
               name: true,
+
               imageUrl: true,
+              imageUrls: true,
+
+              isActive: true,
             },
           },
         },
@@ -143,33 +197,51 @@ export async function getSupplierById(
   });
 }
 
+/*
+ * Creates a supplier user and supplier profile
+ * in one nested Prisma operation.
+ */
 export async function createSupplier(
   input: CreateSupplierInput,
 ) {
-  const passwordHash = await hashPassword(
-    input.password,
-  );
+  const passwordHash =
+    await hashPassword(
+      input.password,
+    );
 
   return prisma.user.create({
     data: {
-      username: input.username,
-      email: input.email ?? null,
+      username:
+        input.username,
+
+      email:
+        input.email ?? null,
+
       passwordHash,
-      role: UserRole.SUPPLIER,
+
+      role:
+        UserRole.SUPPLIER,
 
       supplier: {
         create: {
-          companyName: input.companyName,
-          contactName: input.contactName,
-          phone: input.phone ?? null,
-          address: input.address ?? null,
-          notes: input.notes ?? null,
+          contactName:
+            input.contactName,
+
+          phone:
+            input.phone ?? null,
+
+          address:
+            input.address ?? null,
+
+          notes:
+            input.notes ?? null,
         },
       },
     },
 
     select: {
       id: true,
+
       username: true,
       email: true,
       isActive: true,
@@ -177,7 +249,7 @@ export async function createSupplier(
       supplier: {
         select: {
           id: true,
-          companyName: true,
+
           contactName: true,
           phone: true,
           address: true,
@@ -187,6 +259,13 @@ export async function createSupplier(
   });
 }
 
+/*
+ * Updates supplier information.
+ *
+ * Username is intentionally not changed here.
+ * Email belongs to User, while the remaining
+ * supplier details belong to Supplier.
+ */
 export async function updateSupplier(
   supplierId: string,
   input: UpdateSupplierInput,
@@ -197,17 +276,25 @@ export async function updateSupplier(
     },
 
     data: {
-      companyName: input.companyName,
-      contactName: input.contactName,
-      phone: input.phone,
-      address: input.address,
-      notes: input.notes,
+      contactName:
+        input.contactName,
+
+      phone:
+        input.phone,
+
+      address:
+        input.address,
+
+      notes:
+        input.notes,
 
       user:
-        input.email !== undefined
+        input.email !==
+        undefined
           ? {
               update: {
-                email: input.email,
+                email:
+                  input.email,
               },
             }
           : undefined,
@@ -215,7 +302,7 @@ export async function updateSupplier(
 
     select: {
       id: true,
-      companyName: true,
+
       contactName: true,
       phone: true,
       address: true,
@@ -232,6 +319,9 @@ export async function updateSupplier(
   });
 }
 
+/*
+ * Enables or disables a supplier account.
+ */
 export async function setSupplierStatus(
   supplierId: string,
   isActive: boolean,
@@ -241,6 +331,7 @@ export async function setSupplierStatus(
       where: {
         id: supplierId,
       },
+
       select: {
         userId: true,
       },
@@ -252,8 +343,10 @@ export async function setSupplierStatus(
 
   await prisma.user.update({
     where: {
-      id: supplier.userId,
+      id:
+        supplier.userId,
     },
+
     data: {
       isActive,
     },
@@ -264,6 +357,9 @@ export async function setSupplierStatus(
   };
 }
 
+/*
+ * Resets the supplier's password.
+ */
 export async function resetSupplierPassword(
   supplierId: string,
   password: string,
@@ -273,6 +369,7 @@ export async function resetSupplierPassword(
       where: {
         id: supplierId,
       },
+
       select: {
         userId: true,
       },
@@ -283,12 +380,16 @@ export async function resetSupplierPassword(
   }
 
   const passwordHash =
-    await hashPassword(password);
+    await hashPassword(
+      password,
+    );
 
   await prisma.user.update({
     where: {
-      id: supplier.userId,
+      id:
+        supplier.userId,
     },
+
     data: {
       passwordHash,
     },

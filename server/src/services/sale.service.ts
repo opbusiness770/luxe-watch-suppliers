@@ -2,7 +2,13 @@ import {
   InventoryTransactionType,
 } from "../generated/prisma/client.js";
 
-import { prisma } from "../lib/prisma.js";
+import {
+  prisma,
+} from "../lib/prisma.js";
+
+import {
+  createWatchImageDeliveryData,
+} from "./image-delivery.service.js";
 
 export type CreateSaleItemInput = {
   watchId: string;
@@ -41,12 +47,110 @@ class SaleBusinessError extends Error {
   }
 }
 
+type SaleItemWithWatchImages = {
+  watch: {
+    imageUrl:
+      | string
+      | null;
+
+    imageUrls:
+      string[];
+
+    imagePublicIds:
+      string[];
+  };
+};
+
+/*
+ * Adds signed Cloudinary delivery URLs
+ * to one sale item.
+ *
+ * imagePublicIds are used only by the backend
+ * and are removed before returning the item
+ * to the frontend.
+ */
+function addSaleItemWatchDeliveryUrls<
+  T extends SaleItemWithWatchImages,
+>(
+  item: T,
+) {
+  const {
+    imagePublicIds,
+    ...watchWithoutPublicIds
+  } =
+    item.watch;
+
+  const imageDeliveryData =
+    createWatchImageDeliveryData(
+      item.watch.imageUrl,
+      item.watch.imageUrls,
+      imagePublicIds,
+    );
+
+  return {
+    ...item,
+
+    watch: {
+      ...watchWithoutPublicIds,
+
+      ...imageDeliveryData,
+    },
+  };
+}
+
+/*
+ * Adds signed image delivery URLs to
+ * every watch contained in a sale.
+ */
+function addSaleWatchDeliveryUrls<
+  T extends {
+    items:
+      SaleItemWithWatchImages[];
+  },
+>(
+  sale: T,
+) {
+  return {
+    ...sale,
+
+    items:
+      sale.items.map(
+        (item) =>
+          addSaleItemWatchDeliveryUrls(
+            item,
+          ),
+      ),
+  };
+}
+
+/*
+ * Converts a price to cents before comparison.
+ *
+ * This avoids floating-point comparison problems
+ * such as 0.1 + 0.2 !== 0.3.
+ */
 function toCents(
   value: number,
 ): number {
-  return Math.round(value * 100);
+  return Math.round(
+    value * 100,
+  );
 }
 
+/*
+ * Creates a supplier sale.
+ *
+ * Important business rules:
+ * - The same watch cannot appear twice in one sale.
+ * - The supplier must own the watch in inventory.
+ * - Deleted watches cannot be sold.
+ * - Inactive watches cannot be sold.
+ * - Sale price cannot be lower than the required price.
+ * - Supplier stock cannot become negative.
+ *
+ * The entire operation runs inside one database
+ * transaction so inventory and sales stay synchronized.
+ */
 export async function createSale(
   input: CreateSaleInput,
 ) {
@@ -55,12 +159,19 @@ export async function createSale(
       async (tx) => {
         const watchIds =
           input.items.map(
-            (item) => item.watchId,
+            (item) =>
+              item.watchId,
           );
 
         const uniqueWatchIds =
-          new Set(watchIds);
+          new Set(
+            watchIds,
+          );
 
+        /*
+         * Prevent the same watch from appearing
+         * more than once inside a single sale.
+         */
         if (
           uniqueWatchIds.size !==
           watchIds.length
@@ -70,6 +181,12 @@ export async function createSale(
           );
         }
 
+        /*
+         * Load only current, available watches.
+         *
+         * A watch that was soft-deleted or disabled
+         * must not participate in a new sale.
+         */
         const inventories =
           await tx.supplierInventory.findMany({
             where: {
@@ -77,23 +194,48 @@ export async function createSale(
                 input.supplierId,
 
               watchId: {
-                in: watchIds,
+                in:
+                  watchIds,
+              },
+
+              watch: {
+                deletedAt:
+                  null,
+
+                isActive:
+                  true,
               },
             },
 
             select: {
-              watchId: true,
+              watchId:
+                true,
 
-              supplierCostPrice: true,
-              requiredSalePrice: true,
+              supplierCostPrice:
+                true,
+
+              requiredSalePrice:
+                true,
 
               watch: {
                 select: {
-                  id: true,
-                  sku: true,
-                  brand: true,
-                  model: true,
-                  name: true,
+                  id:
+                    true,
+
+                  brand:
+                    true,
+
+                  model:
+                    true,
+
+                  name:
+                    true,
+
+                  imageUrl:
+                    true,
+
+                  imageUrls:
+                    true,
                 },
               },
             },
@@ -102,77 +244,97 @@ export async function createSale(
         const inventoryByWatch =
           new Map(
             inventories.map(
-              (inventory) => [
+              (
+                inventory,
+              ) => [
                 inventory.watchId,
                 inventory,
               ],
             ),
           );
 
+        /*
+         * Validate each requested sale item
+         * before changing any stock.
+         */
         const preparedItems =
-          input.items.map((item) => {
-            const inventory =
-              inventoryByWatch.get(
-                item.watchId,
-              );
+          input.items.map(
+            (item) => {
+              const inventory =
+                inventoryByWatch.get(
+                  item.watchId,
+                );
 
-            if (!inventory) {
-              throw new SaleBusinessError(
-                "WATCH_NOT_IN_INVENTORY",
-                {
-                  watchId:
-                    item.watchId,
-                },
-              );
-            }
+              /*
+               * This also covers deleted or inactive
+               * watches because they were filtered
+               * from the inventory query above.
+               */
+              if (!inventory) {
+                throw new SaleBusinessError(
+                  "WATCH_NOT_IN_INVENTORY",
+                  {
+                    watchId:
+                      item.watchId,
+                  },
+                );
+              }
 
-            const requiredSalePrice =
-              Number(
-                inventory.requiredSalePrice,
-              );
-
-            if (
-              toCents(item.salePrice) <
-              toCents(requiredSalePrice)
-            ) {
-              throw new SaleBusinessError(
-                "PRICE_TOO_LOW",
-                {
-                  watchId:
-                    item.watchId,
-
-                  requiredSalePrice,
-                },
-              );
-            }
-
-            return {
-              watchId:
-                item.watchId,
-
-              quantity:
-                item.quantity,
-
-              salePrice:
-                item.salePrice,
-
-              supplierCostPrice:
+              const requiredSalePrice =
                 Number(
-                  inventory.supplierCostPrice,
-                ),
+                  inventory.requiredSalePrice,
+                );
 
-              watch:
-                inventory.watch,
-            };
-          });
+              if (
+                toCents(
+                  item.salePrice,
+                ) <
+                toCents(
+                  requiredSalePrice,
+                )
+              ) {
+                throw new SaleBusinessError(
+                  "PRICE_TOO_LOW",
+                  {
+                    watchId:
+                      item.watchId,
+
+                    requiredSalePrice,
+                  },
+                );
+              }
+
+              return {
+                watchId:
+                  item.watchId,
+
+                quantity:
+                  item.quantity,
+
+                salePrice:
+                  item.salePrice,
+
+                supplierCostPrice:
+                  Number(
+                    inventory.supplierCostPrice,
+                  ),
+
+                watch:
+                  inventory.watch,
+              };
+            },
+          );
 
         /*
          * Each stock update is conditional.
+         *
          * This prevents overselling when two
-         * requests arrive at the same time.
+         * requests arrive at approximately
+         * the same time.
          */
         for (
-          const item of preparedItems
+          const item of
+          preparedItems
         ) {
           const result =
             await tx.supplierInventory.updateMany({
@@ -197,17 +359,21 @@ export async function createSale(
               },
             });
 
-          if (result.count === 0) {
+          if (
+            result.count ===
+            0
+          ) {
             const currentInventory =
               await tx.supplierInventory.findUnique({
                 where: {
-                  supplierId_watchId: {
-                    supplierId:
-                      input.supplierId,
+                  supplierId_watchId:
+                    {
+                      supplierId:
+                        input.supplierId,
 
-                    watchId:
-                      item.watchId,
-                  },
+                      watchId:
+                        item.watchId,
+                    },
                 },
 
                 select: {
@@ -224,12 +390,17 @@ export async function createSale(
 
                 currentQuantity:
                   currentInventory
-                    ?.quantityOnHand ?? 0,
+                    ?.quantityOnHand ??
+                  0,
               },
             );
           }
         }
 
+        /*
+         * Read stock balances after all
+         * conditional decrements.
+         */
         const balances =
           await tx.supplierInventory.findMany({
             where: {
@@ -237,29 +408,41 @@ export async function createSale(
                 input.supplierId,
 
               watchId: {
-                in: watchIds,
+                in:
+                  watchIds,
               },
             },
 
             select: {
-              watchId: true,
-              quantityOnHand: true,
+              watchId:
+                true,
+
+              quantityOnHand:
+                true,
             },
           });
 
         const balanceByWatch =
           new Map(
             balances.map(
-              (inventory) => [
+              (
+                inventory,
+              ) => [
                 inventory.watchId,
                 inventory.quantityOnHand,
               ],
             ),
           );
 
+        /*
+         * Calculate the sale total in cents.
+         */
         const totalCents =
           preparedItems.reduce(
-            (total, item) =>
+            (
+              total,
+              item,
+            ) =>
               total +
               toCents(
                 item.salePrice,
@@ -268,6 +451,10 @@ export async function createSale(
             0,
           );
 
+        /*
+         * Create the sale and snapshot all item
+         * prices at the moment of sale.
+         */
         const sale =
           await tx.sale.create({
             data: {
@@ -275,15 +462,19 @@ export async function createSale(
                 input.supplierId,
 
               totalAmount:
-                totalCents / 100,
+                totalCents /
+                100,
 
               notes:
-                input.notes ?? null,
+                input.notes ??
+                null,
 
               items: {
                 create:
                   preparedItems.map(
-                    (item) => ({
+                    (
+                      item,
+                    ) => ({
                       watchId:
                         item.watchId,
 
@@ -301,27 +492,61 @@ export async function createSale(
             },
 
             select: {
-              id: true,
-              status: true,
-              totalAmount: true,
-              soldAt: true,
-              notes: true,
+              id:
+                true,
+
+              status:
+                true,
+
+              totalAmount:
+                true,
+
+              soldAt:
+                true,
+
+              notes:
+                true,
 
               items: {
                 select: {
-                  id: true,
-                  quantity: true,
-                  salePrice: true,
+                  id:
+                    true,
+
+                  quantity:
+                    true,
+
+                  salePrice:
+                    true,
+
                   supplierCostPrice:
                     true,
 
                   watch: {
                     select: {
-                      id: true,
-                      sku: true,
-                      brand: true,
-                      model: true,
-                      name: true,
+                      id:
+                        true,
+
+                      brand:
+                        true,
+
+                      model:
+                        true,
+
+                      name:
+                        true,
+
+                      imageUrl:
+                        true,
+
+                      imageUrls:
+                        true,
+
+                      /*
+                       * Used only to generate
+                       * signed authenticated URLs.
+                       */
+                      imagePublicIds:
+                        true,
                     },
                   },
                 },
@@ -329,10 +554,16 @@ export async function createSale(
             },
           });
 
+        /*
+         * Write one inventory transaction
+         * for every watch included in the sale.
+         */
         await tx.inventoryTransaction.createMany({
           data:
             preparedItems.map(
-              (item) => ({
+              (
+                item,
+              ) => ({
                 supplierId:
                   input.supplierId,
 
@@ -359,11 +590,17 @@ export async function createSale(
             ),
         });
 
+        const saleWithDeliveryUrls =
+          addSaleWatchDeliveryUrls(
+            sale,
+          );
+
         return {
           status:
             "SUCCESS" as const,
 
-          sale,
+          sale:
+            saleWithDeliveryUrls,
         };
       },
     );
@@ -373,7 +610,9 @@ export async function createSale(
       SaleBusinessError
     ) {
       return {
-        status: error.code,
+        status:
+          error.code,
+
         ...error.details,
       };
     }
@@ -382,6 +621,20 @@ export async function createSale(
   }
 }
 
+/*
+ * Returns the supplier's historical sales.
+ *
+ * IMPORTANT:
+ * Deleted watches are intentionally NOT filtered
+ * from historical sales.
+ *
+ * A watch may disappear from the active catalog,
+ * but an old sale containing that watch must always
+ * remain visible.
+ *
+ * Signed Cloudinary delivery URLs are generated
+ * even for watches that were later deleted.
+ */
 export async function getSupplierSales(
   options: GetSupplierSalesOptions,
 ) {
@@ -392,41 +645,87 @@ export async function getSupplierSales(
   } = options;
 
   const skip =
-    (page - 1) * limit;
+    (page - 1) *
+    limit;
 
   const where = {
     supplierId,
   };
 
-  const [sales, total] =
+  const [
+    sales,
+    total,
+  ] =
     await Promise.all([
       prisma.sale.findMany({
         where,
 
         skip,
-        take: limit,
+
+        take:
+          limit,
 
         select: {
-          id: true,
-          status: true,
-          totalAmount: true,
-          soldAt: true,
-          notes: true,
+          id:
+            true,
+
+          status:
+            true,
+
+          totalAmount:
+            true,
+
+          soldAt:
+            true,
+
+          notes:
+            true,
 
           items: {
             select: {
-              id: true,
-              quantity: true,
-              salePrice: true,
+              id:
+                true,
+
+              quantity:
+                true,
+
+              salePrice:
+                true,
 
               watch: {
                 select: {
-                  id: true,
-                  sku: true,
-                  brand: true,
-                  model: true,
-                  name: true,
-                  imageUrl: true,
+                  id:
+                    true,
+
+                  brand:
+                    true,
+
+                  model:
+                    true,
+
+                  name:
+                    true,
+
+                  imageUrl:
+                    true,
+
+                  imageUrls:
+                    true,
+
+                  /*
+                   * Used only on the backend
+                   * for signed delivery URLs.
+                   */
+                  imagePublicIds:
+                    true,
+
+                  /*
+                   * Allows the frontend to mark
+                   * historical watches that were
+                   * removed from the catalog.
+                   */
+                  deletedAt:
+                    true,
                 },
               },
             },
@@ -434,7 +733,8 @@ export async function getSupplierSales(
         },
 
         orderBy: {
-          soldAt: "desc",
+          soldAt:
+            "desc",
         },
       }),
 
@@ -443,8 +743,17 @@ export async function getSupplierSales(
       }),
     ]);
 
+  const salesWithDeliveryUrls =
+    sales.map(
+      (sale) =>
+        addSaleWatchDeliveryUrls(
+          sale,
+        ),
+    );
+
   return {
-    sales,
+    sales:
+      salesWithDeliveryUrls,
 
     pagination: {
       page,
@@ -452,48 +761,108 @@ export async function getSupplierSales(
       total,
 
       totalPages:
-        Math.ceil(total / limit),
+        Math.ceil(
+          total /
+            limit,
+        ),
     },
   };
 }
 
+/*
+ * Returns one historical sale belonging
+ * to a specific supplier.
+ *
+ * No deletedAt filter is used here.
+ * Historical data must remain accessible.
+ */
 export async function getSupplierSaleById(
   supplierId: string,
   saleId: string,
 ) {
-  return prisma.sale.findFirst({
-    where: {
-      id: saleId,
-      supplierId,
-    },
+  const sale =
+    await prisma.sale.findFirst({
+      where: {
+        id:
+          saleId,
 
-    select: {
-      id: true,
-      status: true,
-      totalAmount: true,
-      soldAt: true,
-      notes: true,
-      createdAt: true,
+        supplierId,
+      },
 
-      items: {
-        select: {
-          id: true,
-          quantity: true,
-          salePrice: true,
-          supplierCostPrice: true,
+      select: {
+        id:
+          true,
 
-          watch: {
-            select: {
-              id: true,
-              sku: true,
-              brand: true,
-              model: true,
-              name: true,
-              imageUrl: true,
+        status:
+          true,
+
+        totalAmount:
+          true,
+
+        soldAt:
+          true,
+
+        notes:
+          true,
+
+        createdAt:
+          true,
+
+        items: {
+          select: {
+            id:
+              true,
+
+            quantity:
+              true,
+
+            salePrice:
+              true,
+
+            supplierCostPrice:
+              true,
+
+            watch: {
+              select: {
+                id:
+                  true,
+
+                brand:
+                  true,
+
+                model:
+                  true,
+
+                name:
+                  true,
+
+                imageUrl:
+                  true,
+
+                imageUrls:
+                  true,
+
+                /*
+                 * Used only to generate
+                 * authenticated delivery URLs.
+                 */
+                imagePublicIds:
+                  true,
+
+                deletedAt:
+                  true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
+
+  if (!sale) {
+    return null;
+  }
+
+  return addSaleWatchDeliveryUrls(
+    sale,
+  );
 }

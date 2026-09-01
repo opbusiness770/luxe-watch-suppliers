@@ -38,19 +38,21 @@ export default function AdminDashboardPage() {
     dashboard,
     setDashboard,
   ] =
-    useState<AdminDashboardResponse | null>(
-      null,
-    );
+    useState<
+      AdminDashboardResponse | null
+    >(null);
 
   const [
     isLoading,
     setIsLoading,
-  ] = useState(true);
+  ] =
+    useState(true);
 
   const [
     error,
     setError,
-  ] = useState("");
+  ] =
+    useState("");
 
   useEffect(() => {
     const controller =
@@ -65,11 +67,15 @@ export default function AdminDashboardPage() {
             controller.signal,
           );
 
-        setDashboard(response);
+        setDashboard(
+          response,
+        );
       } catch (error) {
         if (
-          error instanceof DOMException &&
-          error.name === "AbortError"
+          error instanceof
+            DOMException &&
+          error.name ===
+            "AbortError"
         ) {
           return;
         }
@@ -79,9 +85,12 @@ export default function AdminDashboardPage() {
         );
       } finally {
         if (
-          !controller.signal.aborted
+          !controller.signal
+            .aborted
         ) {
-          setIsLoading(false);
+          setIsLoading(
+            false,
+          );
         }
       }
     }
@@ -97,10 +106,15 @@ export default function AdminDashboardPage() {
     return (
       <Box
         sx={{
-          minHeight: 400,
+          minHeight:
+            400,
 
-          display: "flex",
-          alignItems: "center",
+          display:
+            "flex",
+
+          alignItems:
+            "center",
+
           justifyContent:
             "center",
         }}
@@ -115,7 +129,9 @@ export default function AdminDashboardPage() {
     !dashboard
   ) {
     return (
-      <Alert severity="error">
+      <Alert
+        severity="error"
+      >
         {error ||
           "לא ניתן לטעון את לוח הבקרה"}
       </Alert>
@@ -131,21 +147,28 @@ export default function AdminDashboardPage() {
   return (
     <Box
       sx={{
-        maxWidth: 1500,
-        mx: "auto",
+        maxWidth:
+          1500,
+
+        mx:
+          "auto",
       }}
     >
       {/* Header */}
       <Box
         sx={{
-          mb: 4,
+          mb:
+            4,
         }}
       >
         <Typography
           variant="h4"
           sx={{
-            fontWeight: 600,
-            mb: 0.75,
+            fontWeight:
+              600,
+
+            mb:
+              0.75,
           }}
         >
           לוח בקרה
@@ -161,17 +184,28 @@ export default function AdminDashboardPage() {
       {/* Summary cards */}
       <Box
         sx={{
-          display: "grid",
+          display:
+            "grid",
 
           gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, minmax(0, 1fr))",
-            lg: "repeat(3, minmax(0, 1fr))",
-            xl: "repeat(5, minmax(0, 1fr))",
+            xs:
+              "1fr",
+
+            sm:
+              "repeat(2, minmax(0, 1fr))",
+
+            lg:
+              "repeat(3, minmax(0, 1fr))",
+
+            xl:
+              "repeat(5, minmax(0, 1fr))",
           },
 
-          gap: 2,
-          mb: 4,
+          gap:
+            2,
+
+          mb:
+            4,
         }}
       >
         <StatCard
@@ -208,9 +242,11 @@ export default function AdminDashboardPage() {
 
         <StatCard
           title="הכנסות החודש"
-          value={formatCurrency(
-            summary.monthlyRevenue,
-          )}
+          value={
+            formatCurrency(
+              summary.monthlyRevenue,
+            )
+          }
           subtitle="סך המכירות שהושלמו"
         />
       </Box>
@@ -218,33 +254,45 @@ export default function AdminDashboardPage() {
       {/* Main dashboard content */}
       <Box
         sx={{
-          display: "grid",
+          display:
+            "grid",
 
           gridTemplateColumns: {
-            xs: "1fr",
-            lg: "minmax(0, 1.5fr) minmax(300px, 0.8fr)",
+            xs:
+              "1fr",
+
+            lg:
+              "minmax(0, 1.5fr) minmax(300px, 0.8fr)",
           },
 
-          gap: 3,
-          alignItems: "start",
+          gap:
+            3,
+
+          alignItems:
+            "start",
         }}
       >
         {/* Recent sales */}
         <Paper
           sx={{
-            overflow: "hidden",
+            overflow:
+              "hidden",
           }}
         >
           <Box
             sx={{
-              px: 3,
-              py: 2.5,
+              px:
+                3,
+
+              py:
+                2.5,
             }}
           >
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 600,
+                fontWeight:
+                  600,
               }}
             >
               מכירות אחרונות
@@ -254,7 +302,8 @@ export default function AdminDashboardPage() {
               variant="body2"
               color="text.secondary"
               sx={{
-                mt: 0.5,
+                mt:
+                  0.5,
               }}
             >
               חמש המכירות האחרונות במערכת
@@ -267,8 +316,11 @@ export default function AdminDashboardPage() {
           0 ? (
             <Box
               sx={{
-                p: 4,
-                textAlign: "center",
+                p:
+                  4,
+
+                textAlign:
+                  "center",
               }}
             >
               <Typography
@@ -298,9 +350,13 @@ export default function AdminDashboardPage() {
 
                 <TableBody>
                   {recentSales.map(
-                    (sale) => (
+                    (
+                      sale,
+                    ) => (
                       <TableRow
-                        key={sale.id}
+                        key={
+                          sale.id
+                        }
                         hover
                       >
                         <TableCell>
@@ -314,7 +370,7 @@ export default function AdminDashboardPage() {
                             {
                               sale
                                 .supplier
-                                .companyName
+                                .contactName
                             }
                           </Typography>
                         </TableCell>
@@ -353,14 +409,18 @@ export default function AdminDashboardPage() {
         <Paper>
           <Box
             sx={{
-              px: 3,
-              py: 2.5,
+              px:
+                3,
+
+              py:
+                2.5,
             }}
           >
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 600,
+                fontWeight:
+                  600,
               }}
             >
               ספקים מובילים
@@ -370,7 +430,8 @@ export default function AdminDashboardPage() {
               variant="body2"
               color="text.secondary"
               sx={{
-                mt: 0.5,
+                mt:
+                  0.5,
               }}
             >
               לפי הכנסות החודש
@@ -383,8 +444,11 @@ export default function AdminDashboardPage() {
           0 ? (
             <Box
               sx={{
-                p: 4,
-                textAlign: "center",
+                p:
+                  4,
+
+                textAlign:
+                  "center",
               }}
             >
               <Typography
@@ -396,7 +460,8 @@ export default function AdminDashboardPage() {
           ) : (
             <Box
               sx={{
-                p: 3,
+                p:
+                  3,
               }}
             >
               {topSuppliers.map(
@@ -420,13 +485,17 @@ export default function AdminDashboardPage() {
                         alignItems:
                           "center",
 
-                        gap: 2,
-                        py: 1.75,
+                        gap:
+                          2,
+
+                        py:
+                          1.75,
                       }}
                     >
                       <Box
                         sx={{
-                          minWidth: 0,
+                          minWidth:
+                            0,
                         }}
                       >
                         <Typography
@@ -437,7 +506,7 @@ export default function AdminDashboardPage() {
                         >
                           {index + 1}.{" "}
                           {
-                            supplier.companyName
+                            supplier.contactName
                           }
                         </Typography>
 

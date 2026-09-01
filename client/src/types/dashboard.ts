@@ -4,20 +4,30 @@ export type MoneyValue =
 
 export type DashboardSummary = {
   activeSuppliers: number;
+
   activeWatches: number;
+
   warehouseUnits: number;
+
   monthlySales: number;
-  monthlyRevenue: MoneyValue;
+
+  monthlyRevenue:
+    MoneyValue;
 };
 
 export type RecentSale = {
   id: string;
-  totalAmount: MoneyValue;
+
+  totalAmount:
+    MoneyValue;
+
   soldAt: string;
 
   supplier: {
     id: string;
-    companyName: string;
+
+    contactName:
+      string;
   };
 
   _count: {
@@ -27,13 +37,23 @@ export type RecentSale = {
 
 export type TopSupplier = {
   supplierId: string;
-  companyName: string;
+
+  contactName:
+    string;
+
   salesCount: number;
-  revenue: MoneyValue;
+
+  revenue:
+    MoneyValue;
 };
 
 export type AdminDashboardResponse = {
-  summary: DashboardSummary;
-  recentSales: RecentSale[];
-  topSuppliers: TopSupplier[];
+  summary:
+    DashboardSummary;
+
+  recentSales:
+    RecentSale[];
+
+  topSuppliers:
+    TopSupplier[];
 };

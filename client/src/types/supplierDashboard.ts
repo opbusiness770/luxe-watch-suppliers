@@ -25,10 +25,20 @@ export type SupplierDashboardRecentSaleItem = {
 
   watch: {
     id: string;
-    sku: string;
+
     brand: string;
     model: string;
     name: string;
+
+    imageUrl:
+      | string
+      | null;
+
+    imageUrls: string[];
+
+    deletedAt:
+      | string
+      | null;
   };
 };
 

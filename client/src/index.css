@@ -1,20 +1,28 @@
 html {
   direction: rtl;
-}
-
-html,
-body,
-#root {
   min-height: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  min-height: 100vh;
+
   background: #f8f7f4;
+
+  overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-* {
+#root {
+  min-height: 100vh;
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -23,4 +31,35 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(179, 145, 84, 0.22);
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f4f2ee;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7b995;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aa915d;
 }

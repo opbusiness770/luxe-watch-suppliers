@@ -1,7 +1,12 @@
 import {
+  useState,
+} from "react";
+
+import {
   Box,
   Button,
   Divider,
+  Drawer,
   Typography,
 } from "@mui/material";
 
@@ -14,6 +19,12 @@ import {
 import {
   useAuth,
 } from "../context/AuthContext";
+
+import LuxuryHeader from "../components/layout/LuxuryHeader";
+
+import LiveClockBackground from "../components/common/LiveClockBackground";
+
+const DRAWER_WIDTH = 300;
 
 const menuItems = [
   {
@@ -47,7 +58,14 @@ export default function AdminLayout() {
   const navigate =
     useNavigate();
 
+  const [
+    menuOpen,
+    setMenuOpen,
+  ] = useState(false);
+
   async function handleLogout() {
+    setMenuOpen(false);
+
     await logout();
 
     navigate(
@@ -58,183 +76,352 @@ export default function AdminLayout() {
     );
   }
 
+  function handleNavigation() {
+    setMenuOpen(false);
+  }
+
   return (
     <Box
       sx={{
-        display: "flex",
-        minHeight: "100vh",
+        minHeight:
+          "100vh",
+
+        position:
+          "relative",
+
+        isolation:
+          "isolate",
+
+        overflowX:
+          "hidden",
+
+        background:
+          "radial-gradient(circle at 10% 0%, rgba(179,145,84,0.13), transparent 30%), radial-gradient(circle at 85% 15%, rgba(212,188,138,0.10), transparent 26%), linear-gradient(180deg, #FBFAF7 0%, #F7F5F1 100%)",
       }}
     >
+      {/* Live decorative clock background */}
+      <LiveClockBackground />
+
+      {/* Top header */}
       <Box
-        component="aside"
         sx={{
-          width: 250,
-          minWidth: 250,
-          flexShrink: 0,
+          position:
+            "relative",
 
-          bgcolor: "#FFFFFF",
-
-          borderLeft:
-            "1px solid",
-
-          borderColor:
-            "divider",
-
-          p: 3,
-
-          display: "flex",
-          flexDirection:
-            "column",
-
-          boxSizing:
-            "border-box",
+          zIndex:
+            2,
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            color:
-              "primary.main",
-
-            letterSpacing: 1,
-          }}
-        >
-          LUXE WATCH
-        </Typography>
-
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
-            mt: 0.5,
-          }}
-        >
-          ממשק מנהל
-        </Typography>
-
-        <Divider
-          sx={{
-            my: 3,
-          }}
+        <LuxuryHeader
+          subtitle="ממשק מנהל"
+          onMenuClick={() =>
+            setMenuOpen(
+              true,
+            )
+          }
         />
+      </Box>
 
+      {/* Navigation drawer */}
+      <Drawer
+        anchor="right"
+        open={menuOpen}
+        onClose={() =>
+          setMenuOpen(false)
+        }
+        ModalProps={{
+          keepMounted: true,
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              width:
+                DRAWER_WIDTH,
+
+              maxWidth:
+                "88vw",
+
+              direction:
+                "rtl",
+
+              borderLeft:
+                "1px solid rgba(179,145,84,0.22)",
+
+              background:
+                "linear-gradient(180deg, #FFFFFF 0%, #FBF9F4 100%)",
+
+              boxShadow:
+                "-20px 0 60px rgba(50,38,18,0.10)",
+            },
+          },
+        }}
+      >
         <Box
-          component="nav"
           sx={{
-            display: "flex",
+            height:
+              "100%",
+
+            p: 3,
+
+            display:
+              "flex",
+
             flexDirection:
               "column",
-            gap: 0.75,
           }}
         >
-          {menuItems.map(
-            (item) => (
-              <Box
-                key={item.to}
-                component={NavLink}
-                to={item.to}
-                sx={{
-                  display:
-                    "block",
+          {/* Drawer brand */}
+          <Box
+            sx={{
+              pb: 1,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                color:
+                  "primary.main",
 
-                  px: 2,
-                  py: 1.25,
+                letterSpacing:
+                  1.4,
 
-                  borderRadius: 2,
+                fontWeight:
+                  700,
+              }}
+            >
+              LUXE WATCH
+            </Typography>
 
-                  color:
-                    "text.primary",
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 0.4,
+              }}
+            >
+              ממשק מנהל
+            </Typography>
+          </Box>
 
-                  textDecoration:
-                    "none",
-
-                  transition:
-                    "background-color 150ms ease, color 150ms ease",
-
-                  "&:hover": {
-                    bgcolor:
-                      "#F7F4EE",
-
-                    color:
-                      "primary.dark",
-                  },
-
-                  "&.active": {
-                    bgcolor:
-                      "#F3EDE2",
-
-                    color:
-                      "primary.dark",
-
-                    fontWeight:
-                      600,
-                  },
-                }}
-              >
-                {item.label}
-              </Box>
-            ),
-          )}
-        </Box>
-
-        <Box
-          sx={{
-            mt: "auto",
-            pt: 4,
-            width: "100%",
-          }}
-        >
           <Divider
             sx={{
-              mb: 3,
+              my: 3,
             }}
           />
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
+          {/* Navigation */}
+          <Box
+            component="nav"
             sx={{
-              mb: 1.5,
+              display:
+                "flex",
 
-              overflow:
-                "hidden",
+              flexDirection:
+                "column",
 
-              textOverflow:
-                "ellipsis",
-
-              whiteSpace:
-                "nowrap",
+              gap: 1,
             }}
           >
-            מחובר כ־
-            {user?.username}
-          </Typography>
+            {menuItems.map(
+              (item) => (
+                <Box
+                  key={
+                    item.to
+                  }
+                  component={
+                    NavLink
+                  }
+                  to={
+                    item.to
+                  }
+                  onClick={
+                    handleNavigation
+                  }
+                  sx={{
+                    display:
+                      "flex",
 
-          <Button
-            variant="outlined"
-            fullWidth
-            onClick={
-              handleLogout
-            }
+                    alignItems:
+                      "center",
+
+                    minHeight:
+                      50,
+
+                    px: 2.3,
+                    py: 1.3,
+
+                    borderRadius:
+                      2.5,
+
+                    color:
+                      "text.primary",
+
+                    textDecoration:
+                      "none",
+
+                    fontSize:
+                      "0.98rem",
+
+                    fontWeight:
+                      500,
+
+                    transition:
+                      "all 170ms ease",
+
+                    "&:hover": {
+                      bgcolor:
+                        "rgba(179,145,84,0.09)",
+
+                      color:
+                        "primary.dark",
+
+                      transform:
+                        "translateX(-3px)",
+                    },
+
+                    "&.active": {
+                      background:
+                        "linear-gradient(90deg, rgba(179,145,84,0.08), rgba(179,145,84,0.18))",
+
+                      color:
+                        "primary.dark",
+
+                      fontWeight:
+                        700,
+
+                      boxShadow:
+                        "inset -4px 0 0 #B39154, 0 5px 18px rgba(179,145,84,0.08)",
+                    },
+                  }}
+                >
+                  {
+                    item.label
+                  }
+                </Box>
+              ),
+            )}
+          </Box>
+
+          {/* Logged-in user */}
+          <Box
+            sx={{
+              mt: "auto",
+              pt: 4,
+            }}
           >
-            התנתקות
-          </Button>
-        </Box>
-      </Box>
+            <Divider
+              sx={{
+                mb: 3,
+              }}
+            />
 
+            <Box
+              sx={{
+                mb: 2.5,
+
+                p: 2,
+
+                borderRadius:
+                  2.5,
+
+                bgcolor:
+                  "rgba(179,145,84,0.07)",
+
+                border:
+                  "1px solid rgba(179,145,84,0.15)",
+              }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+              >
+                משתמש מחובר
+              </Typography>
+
+              <Typography
+                sx={{
+                  mt: 0.5,
+
+                  fontWeight:
+                    700,
+
+                  overflow:
+                    "hidden",
+
+                  textOverflow:
+                    "ellipsis",
+
+                  whiteSpace:
+                    "nowrap",
+                }}
+              >
+                {
+                  user?.username
+                }
+              </Typography>
+            </Box>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={
+                handleLogout
+              }
+              sx={{
+                minHeight:
+                  48,
+
+                fontWeight:
+                  700,
+              }}
+            >
+              התנתקות
+            </Button>
+          </Box>
+        </Box>
+      </Drawer>
+
+      {/* Page content */}
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
-          minWidth: 0,
+          position:
+            "relative",
 
-          p: {
+          zIndex:
+            1,
+
+          width:
+            "100%",
+
+          px: {
             xs: 2,
+            sm: 3,
+            md: 4,
+            lg: 5,
+            xl: 6,
+          },
+
+          py: {
+            xs: 3,
             md: 4,
           },
         }}
       >
-        <Outlet />
+        <Box
+          sx={{
+            width:
+              "100%",
+
+            maxWidth:
+              1500,
+
+            mx:
+              "auto",
+          }}
+        >
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   );

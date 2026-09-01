@@ -23,13 +23,14 @@ type LoginResponse = {
   user: {
     id: string;
     username: string;
+
     role:
       | "ADMIN"
       | "SUPPLIER";
 
     supplier: {
       id: string;
-      companyName: string;
+      contactName: string;
     } | null;
   };
 };
@@ -40,6 +41,7 @@ type MeResponse = {
 
 type AuthContextValue = {
   user: AuthUser | null;
+
   isLoading: boolean;
 
   login: (
@@ -47,7 +49,8 @@ type AuthContextValue = {
     password: string,
   ) => Promise<AuthUser>;
 
-  logout: () => Promise<void>;
+  logout:
+    () => Promise<void>;
 
   refreshUser:
     () => Promise<void>;
@@ -65,7 +68,10 @@ type AuthProviderProps = {
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
-  const [user, setUser] =
+  const [
+    user,
+    setUser,
+  ] =
     useState<AuthUser | null>(
       null,
     );
@@ -73,45 +79,79 @@ export function AuthProvider({
   const [
     isLoading,
     setIsLoading,
-  ] = useState(true);
+  ] =
+    useState(true);
 
+  /*
+   * Loads the currently authenticated user
+   * using the HttpOnly authentication cookie.
+   */
   const refreshUser =
-    useCallback(async () => {
-      try {
-        const response =
-          await apiFetch<MeResponse>(
-            "/api/auth/me",
+    useCallback(
+      async () => {
+        try {
+          const response =
+            await apiFetch<MeResponse>(
+              "/api/auth/me",
+            );
+
+          setUser(
+            response.user,
           );
+        } catch (error) {
+          /*
+           * An expired, missing or invalid
+           * authentication session means the
+           * application should return to its
+           * unauthenticated state.
+           */
+          if (
+            error instanceof
+              HttpError &&
+            (
+              error.status ===
+                401 ||
+              error.status ===
+                403
+            )
+          ) {
+            setUser(null);
 
-        setUser(response.user);
-      } catch (error) {
-        if (
-          error instanceof HttpError &&
-          (
-            error.status === 401 ||
-            error.status === 403
-          )
-        ) {
+            return;
+          }
+
           setUser(null);
-          return;
         }
+      },
+      [],
+    );
 
-        setUser(null);
-      }
-    }, []);
-
+  /*
+   * Restore authentication when the
+   * application first loads.
+   */
   useEffect(() => {
     async function initializeAuth() {
       try {
         await refreshUser();
       } finally {
-        setIsLoading(false);
+        setIsLoading(
+          false,
+        );
       }
     }
 
     void initializeAuth();
   }, [refreshUser]);
 
+  /*
+   * Logs the user in and stores only the
+   * authentication data required by the app.
+   *
+   * The JWT itself remains inside an
+   * HttpOnly cookie and is not exposed to
+   * client-side JavaScript.
+   */
   async function login(
     username: string,
     password: string,
@@ -122,16 +162,18 @@ export function AuthProvider({
         {
           method: "POST",
 
-          body: JSON.stringify({
-            username,
-            password,
-          }),
+          body:
+            JSON.stringify({
+              username,
+              password,
+            }),
         },
       );
 
     const authenticatedUser:
       AuthUser = {
-        id: response.user.id,
+        id:
+          response.user.id,
 
         username:
           response.user.username,
@@ -140,15 +182,23 @@ export function AuthProvider({
           response.user.role,
 
         supplierId:
-          response.user.supplier
-            ?.id ?? null,
+          response.user
+            .supplier
+            ?.id ??
+          null,
       };
 
-    setUser(authenticatedUser);
+    setUser(
+      authenticatedUser,
+    );
 
     return authenticatedUser;
   }
 
+  /*
+   * Logs the user out and clears
+   * the local authentication state.
+   */
   async function logout():
     Promise<void> {
     try {
@@ -181,7 +231,9 @@ export function AuthProvider({
 export function useAuth():
   AuthContextValue {
   const context =
-    useContext(AuthContext);
+    useContext(
+      AuthContext,
+    );
 
   if (!context) {
     throw new Error(

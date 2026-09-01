@@ -6,27 +6,32 @@ import {
   prisma,
 } from "../lib/prisma.js";
 
-function getStartOfCurrentMonth() {
-  const now = new Date();
+import {
+  getCurrentIsraelMonthRange,
+} from "../utils/israel-time.js";
 
-  return new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      1,
-      0,
-      0,
-      0,
-      0,
-    ),
-  );
-}
-
+/*
+ * Returns the dashboard data for a supplier.
+ *
+ * Monthly sales and revenue use the Israeli
+ * calendar month.
+ */
 export async function getSupplierDashboard(
   supplierId: string,
 ) {
-  const startOfMonth =
-    getStartOfCurrentMonth();
+  const {
+    startOfMonth,
+    startOfNextMonth,
+  } =
+    getCurrentIsraelMonthRange();
+
+  const monthlySaleDateFilter = {
+    gte:
+      startOfMonth,
+
+    lt:
+      startOfNextMonth,
+  };
 
   const [
     inventorySummary,
@@ -38,14 +43,23 @@ export async function getSupplierDashboard(
       prisma.supplierInventory.aggregate({
         where: {
           supplierId,
+
+          watch: {
+            is: {
+              deletedAt:
+                null,
+            },
+          },
         },
 
         _count: {
-          _all: true,
+          _all:
+            true,
         },
 
         _sum: {
-          quantityOnHand: true,
+          quantityOnHand:
+            true,
         },
       }),
 
@@ -54,11 +68,26 @@ export async function getSupplierDashboard(
           supplierId,
 
           quantityOnHand: {
-            gt: 0,
+            gt:
+              0,
+          },
+
+          watch: {
+            is: {
+              deletedAt:
+                null,
+
+              isActive:
+                true,
+            },
           },
         },
       }),
 
+      /*
+       * Completed sales during the current
+       * calendar month in Israel.
+       */
       prisma.sale.aggregate({
         where: {
           supplierId,
@@ -66,17 +95,18 @@ export async function getSupplierDashboard(
           status:
             SaleStatus.COMPLETED,
 
-          soldAt: {
-            gte: startOfMonth,
-          },
+          soldAt:
+            monthlySaleDateFilter,
         },
 
         _count: {
-          _all: true,
+          _all:
+            true,
         },
 
         _sum: {
-          totalAmount: true,
+          totalAmount:
+            true,
         },
       }),
 
@@ -89,35 +119,53 @@ export async function getSupplierDashboard(
         },
 
         orderBy: {
-          soldAt: "desc",
+          soldAt:
+            "desc",
         },
 
-        take: 5,
+        take:
+          5,
 
         select: {
-          id: true,
+          id:
+            true,
 
-          status: true,
+          status:
+            true,
 
-          totalAmount: true,
+          totalAmount:
+            true,
 
-          soldAt: true,
+          soldAt:
+            true,
 
           items: {
             select: {
-              id: true,
+              id:
+                true,
 
-              quantity: true,
+              quantity:
+                true,
 
-              salePrice: true,
+              salePrice:
+                true,
 
               watch: {
                 select: {
-                  id: true,
-                  sku: true,
-                  brand: true,
-                  model: true,
-                  name: true,
+                  id:
+                    true,
+
+                  brand:
+                    true,
+
+                  model:
+                    true,
+
+                  name:
+                    true,
+
+                  deletedAt:
+                    true,
                 },
               },
             },
@@ -129,21 +177,28 @@ export async function getSupplierDashboard(
   return {
     summary: {
       totalModels:
-        inventorySummary._count._all,
+        inventorySummary
+          ._count
+          ._all,
 
       availableModels,
 
       inventoryUnits:
-        inventorySummary._sum
-          .quantityOnHand ?? 0,
+        inventorySummary
+          ._sum
+          .quantityOnHand ??
+        0,
 
       monthlySales:
-        monthlySalesSummary._count
+        monthlySalesSummary
+          ._count
           ._all,
 
       monthlyRevenue:
-        monthlySalesSummary._sum
-          .totalAmount ?? 0,
+        monthlySalesSummary
+          ._sum
+          .totalAmount ??
+        0,
     },
 
     recentSales,

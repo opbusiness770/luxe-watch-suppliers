@@ -66,13 +66,17 @@ export default function SupplierSaleDetailsDialog({
       </DialogTitle>
 
       <DialogContent>
+        {/* Sale summary */}
         <Box
           sx={{
-            display: "grid",
+            display:
+              "grid",
 
             gridTemplateColumns: {
               xs: "1fr",
-              sm: "repeat(3, minmax(0, 1fr))",
+
+              sm:
+                "repeat(3, minmax(0, 1fr))",
             },
 
             gap: 2,
@@ -95,7 +99,9 @@ export default function SupplierSaleDetailsDialog({
             <Typography
               sx={{
                 mt: 0.5,
-                fontWeight: 600,
+
+                fontWeight:
+                  600,
               }}
             >
               {formatDateTime(
@@ -125,7 +131,8 @@ export default function SupplierSaleDetailsDialog({
                 color:
                   "primary.dark",
 
-                fontWeight: 600,
+                fontWeight:
+                  600,
               }}
             >
               {formatCurrency(
@@ -171,6 +178,7 @@ export default function SupplierSaleDetailsDialog({
           </Paper>
         </Box>
 
+        {/* Total units */}
         <Typography
           variant="body2"
           color="text.secondary"
@@ -191,12 +199,15 @@ export default function SupplierSaleDetailsDialog({
           variant="h6"
           sx={{
             mb: 2,
-            fontWeight: 600,
+
+            fontWeight:
+              600,
           }}
         >
           פריטי המכירה
         </Typography>
 
+        {/* Sale items */}
         <TableContainer
           component={Paper}
           variant="outlined"
@@ -253,7 +264,7 @@ export default function SupplierSaleDetailsDialog({
                       >
                         {
                           item.watch
-                            .sku
+                            .name
                         }
                       </Typography>
                     </TableCell>
@@ -292,6 +303,7 @@ export default function SupplierSaleDetailsDialog({
           </Table>
         </TableContainer>
 
+        {/* Notes */}
         {sale.notes && (
           <Box
             sx={{

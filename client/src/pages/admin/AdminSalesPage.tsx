@@ -64,6 +64,7 @@ type AppliedFilters = {
     | "";
 
   from: string;
+
   to: string;
 };
 
@@ -78,16 +79,18 @@ export default function AdminSalesPage() {
   const [
     sales,
     setSales,
-  ] = useState<
-    AdminSaleListItem[]
-  >([]);
+  ] =
+    useState<
+      AdminSaleListItem[]
+    >([]);
 
   const [
     suppliers,
     setSuppliers,
-  ] = useState<
-    SupplierListItem[]
-  >([]);
+  ] =
+    useState<
+      SupplierListItem[]
+    >([]);
 
   const [
     filters,
@@ -134,15 +137,19 @@ export default function AdminSalesPage() {
     selectedSale,
     setSelectedSale,
   ] =
-    useState<AdminSaleDetails | null>(
-      null,
-    );
+    useState<
+      AdminSaleDetails | null
+    >(null);
 
   const [
     isLoadingDetails,
     setIsLoadingDetails,
   ] = useState(false);
 
+  /*
+   * Loads sales according to the currently
+   * applied filters and pagination.
+   */
   const loadSales =
     useCallback(
       async (
@@ -238,6 +245,10 @@ export default function AdminSalesPage() {
       [],
     );
 
+  /*
+   * Reload sales whenever pagination
+   * or applied filters change.
+   */
   useEffect(() => {
     const controller =
       new AbortController();
@@ -261,6 +272,9 @@ export default function AdminSalesPage() {
     loadSales,
   ]);
 
+  /*
+   * Loads suppliers for the filter selector.
+   */
   useEffect(() => {
     const controller =
       new AbortController();
@@ -329,11 +343,16 @@ export default function AdminSalesPage() {
     setPage(0);
   }
 
+  /*
+   * Loads the full sale record before opening
+   * the sale details dialog.
+   */
   async function handleViewSale(
     saleId: string,
   ) {
     try {
       setError("");
+
       setIsLoadingDetails(
         true,
       );
@@ -369,21 +388,28 @@ export default function AdminSalesPage() {
   return (
     <Box
       sx={{
-        maxWidth: 1600,
-        mx: "auto",
+        maxWidth:
+          1600,
+
+        mx:
+          "auto",
       }}
     >
       {/* Header */}
       <Box
         sx={{
-          mb: 4,
+          mb:
+            4,
         }}
       >
         <Typography
           variant="h4"
           sx={{
-            fontWeight: 600,
-            mb: 0.75,
+            fontWeight:
+              600,
+
+            mb:
+              0.75,
           }}
         >
           מכירות
@@ -400,7 +426,8 @@ export default function AdminSalesPage() {
         <Alert
           severity="error"
           sx={{
-            mb: 3,
+            mb:
+              3,
           }}
         >
           {error}
@@ -410,15 +437,21 @@ export default function AdminSalesPage() {
       {/* Filters */}
       <Paper
         sx={{
-          p: 2.5,
-          mb: 3,
+          p:
+            2.5,
+
+          mb:
+            3,
         }}
       >
         <Typography
           variant="h6"
           sx={{
-            mb: 2,
-            fontWeight: 600,
+            mb:
+              2,
+
+            fontWeight:
+              600,
           }}
         >
           סינון מכירות
@@ -426,15 +459,22 @@ export default function AdminSalesPage() {
 
         <Box
           sx={{
-            display: "grid",
+            display:
+              "grid",
 
             gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, minmax(0, 1fr))",
-              lg: "repeat(4, minmax(0, 1fr))",
+              xs:
+                "1fr",
+
+              sm:
+                "repeat(2, minmax(0, 1fr))",
+
+              lg:
+                "repeat(4, minmax(0, 1fr))",
             },
 
-            gap: 2,
+            gap:
+              2,
           }}
         >
           <TextField
@@ -473,7 +513,7 @@ export default function AdminSalesPage() {
                   }
                 >
                   {
-                    supplier.companyName
+                    supplier.contactName
                   }
                 </MenuItem>
               ),
@@ -537,7 +577,8 @@ export default function AdminSalesPage() {
             }
             slotProps={{
               inputLabel: {
-                shrink: true,
+                shrink:
+                  true,
               },
             }}
             fullWidth
@@ -564,7 +605,8 @@ export default function AdminSalesPage() {
             }
             slotProps={{
               inputLabel: {
-                shrink: true,
+                shrink:
+                  true,
               },
             }}
             fullWidth
@@ -575,8 +617,11 @@ export default function AdminSalesPage() {
           direction="row"
           spacing={1}
           sx={{
-            mt: 2,
-            flexWrap: "wrap",
+            mt:
+              2,
+
+            flexWrap:
+              "wrap",
           }}
         >
           <Button
@@ -602,19 +647,24 @@ export default function AdminSalesPage() {
       {/* Sales table */}
       <Paper
         sx={{
-          overflow: "hidden",
+          overflow:
+            "hidden",
         }}
       >
         <Box
           sx={{
-            px: 3,
-            py: 2.5,
+            px:
+              3,
+
+            py:
+              2.5,
           }}
         >
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 600,
+              fontWeight:
+                600,
             }}
           >
             רשימת מכירות
@@ -624,7 +674,8 @@ export default function AdminSalesPage() {
             variant="body2"
             color="text.secondary"
             sx={{
-              mt: 0.5,
+              mt:
+                0.5,
             }}
           >
             סה״כ נמצאו{" "}
@@ -635,9 +686,12 @@ export default function AdminSalesPage() {
         {isLoading ? (
           <Box
             sx={{
-              minHeight: 320,
+              minHeight:
+                320,
 
-              display: "flex",
+              display:
+                "flex",
+
               alignItems:
                 "center",
 
@@ -651,7 +705,9 @@ export default function AdminSalesPage() {
           0 ? (
           <Box
             sx={{
-              p: 6,
+              p:
+                6,
+
               textAlign:
                 "center",
             }}
@@ -659,7 +715,8 @@ export default function AdminSalesPage() {
             <Typography
               variant="h6"
               sx={{
-                mb: 1,
+                mb:
+                  1,
               }}
             >
               לא נמצאו מכירות
@@ -676,7 +733,8 @@ export default function AdminSalesPage() {
             <TableContainer>
               <Table
                 sx={{
-                  minWidth: 1000,
+                  minWidth:
+                    1000,
                 }}
               >
                 <TableHead>
@@ -713,7 +771,9 @@ export default function AdminSalesPage() {
 
                 <TableBody>
                   {sales.map(
-                    (sale) => {
+                    (
+                      sale,
+                    ) => {
                       const totalUnits =
                         sale.items.reduce(
                           (
@@ -740,8 +800,9 @@ export default function AdminSalesPage() {
                               }}
                             >
                               {
-                                sale.supplier
-                                  .companyName
+                                sale
+                                  .supplier
+                                  .contactName
                               }
                             </Typography>
                           </TableCell>
@@ -760,7 +821,9 @@ export default function AdminSalesPage() {
                           </TableCell>
 
                           <TableCell>
-                            {totalUnits}
+                            {
+                              totalUnits
+                            }
                           </TableCell>
 
                           <TableCell>

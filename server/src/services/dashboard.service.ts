@@ -1,217 +1,276 @@
 import {
-    SaleStatus,
+  SaleStatus,
 } from "../generated/prisma/client.js";
 
-import { prisma } from "../lib/prisma.js";
+import {
+  prisma,
+} from "../lib/prisma.js";
 
-function getStartOfCurrentMonth(): Date {
-    const now = new Date();
+import {
+  getCurrentIsraelMonthRange,
+} from "../utils/israel-time.js";
 
-    return new Date(
-        Date.UTC(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            1,
-            0,
-            0,
-            0,
-            0,
-        ),
-    );
-}
-
+/*
+ * Returns the main Admin dashboard data.
+ *
+ * Monthly calculations use the calendar month
+ * according to Israel time.
+ */
 export async function getAdminDashboard() {
-    const startOfMonth =
-        getStartOfCurrentMonth();
+  const {
+    startOfMonth,
+    startOfNextMonth,
+  } =
+    getCurrentIsraelMonthRange();
 
-    const [
-        activeSuppliers,
-        activeWatches,
-        warehouseInventory,
-        monthlySales,
-        monthlyRevenue,
-        recentSales,
-    ] = await Promise.all([
-        prisma.supplier.count({
-            where: {
-                user: {
-                    isActive: true,
-                },
-            },
-        }),
+  const monthlySaleDateFilter = {
+    gte:
+      startOfMonth,
 
-        prisma.watch.count({
-            where: {
-                isActive: true,
-            },
-        }),
+    lt:
+      startOfNextMonth,
+  };
 
-        prisma.warehouseInventory.aggregate({
-            _sum: {
-                quantityOnHand: true,
-            },
-        }),
+  const [
+    activeSuppliers,
+    activeWatches,
+    warehouseInventory,
+    monthlySales,
+    monthlyRevenue,
+    recentSales,
+  ] = await Promise.all([
+    prisma.supplier.count({
+      where: {
+        user: {
+          isActive:
+            true,
+        },
+      },
+    }),
 
-        prisma.sale.count({
-            where: {
-                status:
-                    SaleStatus.COMPLETED,
+    prisma.watch.count({
+      where: {
+        isActive:
+          true,
 
-                soldAt: {
-                    gte: startOfMonth,
-                },
-            },
-        }),
+        deletedAt:
+          null,
+      },
+    }),
 
-        prisma.sale.aggregate({
-            where: {
-                status:
-                    SaleStatus.COMPLETED,
+    prisma.warehouseInventory.aggregate({
+      where: {
+        watch: {
+          is: {
+            deletedAt:
+              null,
+          },
+        },
+      },
 
-                soldAt: {
-                    gte: startOfMonth,
-                },
-            },
+      _sum: {
+        quantityOnHand:
+          true,
+      },
+    }),
 
-            _sum: {
-                totalAmount: true,
-            },
-        }),
+    /*
+     * Completed sales inside the current
+     * Israeli calendar month.
+     */
+    prisma.sale.count({
+      where: {
+        status:
+          SaleStatus.COMPLETED,
 
-        prisma.sale.findMany({
-            where: {
-                status:
-                    SaleStatus.COMPLETED,
-            },
+        soldAt:
+          monthlySaleDateFilter,
+      },
+    }),
 
-            take: 5,
+    prisma.sale.aggregate({
+      where: {
+        status:
+          SaleStatus.COMPLETED,
 
-            orderBy: {
-                soldAt: "desc",
-            },
+        soldAt:
+          monthlySaleDateFilter,
+      },
 
-            select: {
-                id: true,
-                totalAmount: true,
-                soldAt: true,
+      _sum: {
+        totalAmount:
+          true,
+      },
+    }),
 
-                supplier: {
-                    select: {
-                        id: true,
-                        companyName: true,
-                    },
-                },
+    /*
+     * Historical recent sales are not restricted
+     * to the current month.
+     */
+    prisma.sale.findMany({
+      where: {
+        status:
+          SaleStatus.COMPLETED,
+      },
 
-                _count: {
-                    select: {
-                        items: true,
-                    },
-                },
-            },
-        }),
-    ]);
-    const topSupplierGroups =
-        await prisma.sale.groupBy({
-            by: [
-                "supplierId",
-            ],
+      take:
+        5,
 
-            where: {
-                status:
-                    SaleStatus.COMPLETED,
+      orderBy: {
+        soldAt:
+          "desc",
+      },
 
-                soldAt: {
-                    gte: startOfMonth,
-                },
-            },
+      select: {
+        id:
+          true,
 
-            _sum: {
-                totalAmount: true,
-            },
+        totalAmount:
+          true,
 
-            _count: {
-                id: true,
-            },
+        soldAt:
+          true,
 
-            orderBy: {
-                _sum: {
-                    totalAmount: "desc",
-                },
-            },
+        supplier: {
+          select: {
+            id:
+              true,
 
-            take: 5,
-        });
-
-    const supplierIds =
-        topSupplierGroups.map(
-            (item) => item.supplierId,
-        );
-
-    const suppliers =
-        supplierIds.length > 0
-            ? await prisma.supplier.findMany({
-                where: {
-                    id: {
-                        in: supplierIds,
-                    },
-                },
-
-                select: {
-                    id: true,
-                    companyName: true,
-                },
-            })
-            : [];
-
-    const supplierById =
-        new Map(
-            suppliers.map(
-                (supplier) => [
-                    supplier.id,
-                    supplier,
-                ],
-            ),
-        );
-
-    const topSuppliers =
-        topSupplierGroups.map(
-            (group) => ({
-                supplierId:
-                    group.supplierId,
-
-                companyName:
-                    supplierById.get(
-                        group.supplierId,
-                    )?.companyName ??
-                    "ספק לא ידוע",
-
-                salesCount:
-                    group._count.id,
-
-                revenue:
-                    group._sum.totalAmount ?? 0,
-            }),
-        );
-    return {
-        summary: {
-            activeSuppliers,
-            activeWatches,
-
-            warehouseUnits:
-                warehouseInventory
-                    ._sum
-                    .quantityOnHand ?? 0,
-
-            monthlySales,
-
-            monthlyRevenue:
-                monthlyRevenue
-                    ._sum
-                    .totalAmount ?? 0,
+            contactName:
+              true,
+          },
         },
 
-        recentSales,
+        _count: {
+          select: {
+            items:
+              true,
+          },
+        },
+      },
+    }),
+  ]);
 
-        topSuppliers,
-    };
+  /*
+   * Top suppliers inside the current
+   * Israeli calendar month.
+   */
+  const topSupplierGroups =
+    await prisma.sale.groupBy({
+      by: [
+        "supplierId",
+      ],
+
+      where: {
+        status:
+          SaleStatus.COMPLETED,
+
+        soldAt:
+          monthlySaleDateFilter,
+      },
+
+      _sum: {
+        totalAmount:
+          true,
+      },
+
+      _count: {
+        id:
+          true,
+      },
+
+      orderBy: {
+        _sum: {
+          totalAmount:
+            "desc",
+        },
+      },
+
+      take:
+        5,
+    });
+
+  const supplierIds =
+    topSupplierGroups.map(
+      (item) =>
+        item.supplierId,
+    );
+
+  const suppliers =
+    supplierIds.length >
+    0
+      ? await prisma.supplier.findMany({
+          where: {
+            id: {
+              in:
+                supplierIds,
+            },
+          },
+
+          select: {
+            id:
+              true,
+
+            contactName:
+              true,
+          },
+        })
+      : [];
+
+  const supplierById =
+    new Map(
+      suppliers.map(
+        (supplier) => [
+          supplier.id,
+          supplier,
+        ],
+      ),
+    );
+
+  const topSuppliers =
+    topSupplierGroups.map(
+      (group) => ({
+        supplierId:
+          group.supplierId,
+
+        contactName:
+          supplierById.get(
+            group.supplierId,
+          )?.contactName ??
+          "ספק לא ידוע",
+
+        salesCount:
+          group._count.id,
+
+        revenue:
+          group._sum
+            .totalAmount ??
+          0,
+      }),
+    );
+
+  return {
+    summary: {
+      activeSuppliers,
+      activeWatches,
+
+      warehouseUnits:
+        warehouseInventory
+          ._sum
+          .quantityOnHand ??
+        0,
+
+      monthlySales,
+
+      monthlyRevenue:
+        monthlyRevenue
+          ._sum
+          .totalAmount ??
+        0,
+    },
+
+    recentSales,
+
+    topSuppliers,
+  };
 }

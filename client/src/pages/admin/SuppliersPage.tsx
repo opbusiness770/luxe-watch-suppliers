@@ -44,49 +44,67 @@ export default function SuppliersPage() {
   const [
     suppliers,
     setSuppliers,
-  ] = useState<SupplierListItem[]>([]);
+  ] =
+    useState<
+      SupplierListItem[]
+    >([]);
 
   const [
     search,
     setSearch,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     isLoading,
     setIsLoading,
-  ] = useState(true);
+  ] =
+    useState(true);
 
   const [
     error,
     setError,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     dialogOpen,
     setDialogOpen,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const [
     selectedSupplier,
     setSelectedSupplier,
-  ] = useState<SupplierDetails | null>(
-    null,
-  );
+  ] =
+    useState<
+      SupplierDetails | null
+    >(null);
 
   const [
     resetPasswordSupplier,
     setResetPasswordSupplier,
-  ] = useState<SupplierListItem | null>(
-    null,
-  );
+  ] =
+    useState<
+      SupplierListItem | null
+    >(null);
 
   const [
     changingStatusId,
     setChangingStatusId,
-  ] = useState<string | null>(
-    null,
-  );
+  ] =
+    useState<
+      string | null
+    >(null);
 
+  /*
+   * Loads the suppliers list.
+   *
+   * The backend supports searching by:
+   * - Contact name
+   * - Username
+   * - Email
+   */
   const loadSuppliers =
     useCallback(
       async (
@@ -107,8 +125,10 @@ export default function SuppliersPage() {
           );
         } catch (error) {
           if (
-            error instanceof DOMException &&
-            error.name === "AbortError"
+            error instanceof
+              DOMException &&
+            error.name ===
+              "AbortError"
           ) {
             return;
           }
@@ -117,28 +137,41 @@ export default function SuppliersPage() {
             "לא ניתן לטעון את רשימת הספקים",
           );
         } finally {
-          if (!signal?.aborted) {
-            setIsLoading(false);
+          if (
+            !signal?.aborted
+          ) {
+            setIsLoading(
+              false,
+            );
           }
         }
       },
       [],
     );
 
+  /*
+   * Debounced supplier search.
+   */
   useEffect(() => {
     const controller =
       new AbortController();
 
     const timer =
-      window.setTimeout(() => {
-        void loadSuppliers(
-          search,
-          controller.signal,
-        );
-      }, 300);
+      window.setTimeout(
+        () => {
+          void loadSuppliers(
+            search,
+            controller.signal,
+          );
+        },
+        300,
+      );
 
     return () => {
-      window.clearTimeout(timer);
+      window.clearTimeout(
+        timer,
+      );
+
       controller.abort();
     };
   }, [
@@ -146,6 +179,10 @@ export default function SuppliersPage() {
     loadSuppliers,
   ]);
 
+  /*
+   * Loads full supplier details before
+   * opening the edit dialog.
+   */
   async function handleEdit(
     supplierId: string,
   ) {
@@ -164,9 +201,12 @@ export default function SuppliersPage() {
       setDialogOpen(true);
     } catch (error) {
       if (
-        error instanceof HttpError
+        error instanceof
+        HttpError
       ) {
-        setError(error.message);
+        setError(
+          error.message,
+        );
       } else {
         setError(
           "לא ניתן לטעון את פרטי הספק",
@@ -175,13 +215,24 @@ export default function SuppliersPage() {
     }
   }
 
+  /*
+   * Opens an empty dialog for
+   * creating a new supplier.
+   */
   function handleCreate() {
-    setSelectedSupplier(null);
+    setSelectedSupplier(
+      null,
+    );
+
     setDialogOpen(true);
   }
 
+  /*
+   * Enables or blocks a supplier account.
+   */
   async function handleStatusChange(
-    supplier: SupplierListItem,
+    supplier:
+      SupplierListItem,
   ) {
     try {
       setChangingStatusId(
@@ -192,7 +243,8 @@ export default function SuppliersPage() {
 
       await setSupplierStatus(
         supplier.id,
-        !supplier.user.isActive,
+        !supplier.user
+          .isActive,
       );
 
       await loadSuppliers(
@@ -200,9 +252,12 @@ export default function SuppliersPage() {
       );
     } catch (error) {
       if (
-        error instanceof HttpError
+        error instanceof
+        HttpError
       ) {
-        setError(error.message);
+        setError(
+          error.message,
+        );
       } else {
         setError(
           "לא ניתן לעדכן את מצב הספק",
@@ -215,6 +270,10 @@ export default function SuppliersPage() {
     }
   }
 
+  /*
+   * Reload supplier data after
+   * creating or editing a supplier.
+   */
   function handleSaved() {
     setIsLoading(true);
 
@@ -233,7 +292,8 @@ export default function SuppliersPage() {
       {/* Header */}
       <Box
         sx={{
-          display: "flex",
+          display:
+            "flex",
 
           flexDirection: {
             xs: "column",
@@ -301,11 +361,14 @@ export default function SuppliersPage() {
       >
         <TextField
           label="חיפוש ספק"
-          placeholder="חיפוש לפי חברה, איש קשר או שם משתמש"
+          placeholder="חיפוש לפי איש קשר, שם משתמש או אימייל"
           value={search}
-          onChange={(event) =>
+          onChange={(
+            event,
+          ) =>
             setSearch(
-              event.target.value,
+              event.target
+                .value,
             )
           }
           fullWidth
@@ -315,7 +378,8 @@ export default function SuppliersPage() {
       {/* Suppliers table */}
       <Paper
         sx={{
-          overflow: "hidden",
+          overflow:
+            "hidden",
         }}
       >
         {isLoading ? (
@@ -323,8 +387,12 @@ export default function SuppliersPage() {
             sx={{
               minHeight: 300,
 
-              display: "flex",
-              alignItems: "center",
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
               justifyContent:
                 "center",
             }}
@@ -336,7 +404,8 @@ export default function SuppliersPage() {
           <Box
             sx={{
               p: 6,
-              textAlign: "center",
+              textAlign:
+                "center",
             }}
           >
             <Typography
@@ -360,15 +429,15 @@ export default function SuppliersPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    חברה
-                  </TableCell>
-
-                  <TableCell>
                     איש קשר
                   </TableCell>
 
                   <TableCell>
                     שם משתמש
+                  </TableCell>
+
+                  <TableCell>
+                    אימייל
                   </TableCell>
 
                   <TableCell>
@@ -412,21 +481,22 @@ export default function SuppliersPage() {
                           }}
                         >
                           {
-                            supplier.companyName
+                            supplier.contactName
                           }
                         </Typography>
                       </TableCell>
 
                       <TableCell>
                         {
-                          supplier.contactName
+                          supplier.user
+                            .username
                         }
                       </TableCell>
 
                       <TableCell>
-                        {
-                          supplier.user.username
-                        }
+                        {supplier.user
+                          .email ||
+                          "לא הוזן"}
                       </TableCell>
 
                       <TableCell>
@@ -555,7 +625,9 @@ export default function SuppliersPage() {
           selectedSupplier
         }
         onClose={() => {
-          setDialogOpen(false);
+          setDialogOpen(
+            false,
+          );
 
           setSelectedSupplier(
             null,
@@ -578,7 +650,8 @@ export default function SuppliersPage() {
         }
         supplierName={
           resetPasswordSupplier
-            ?.companyName ?? ""
+            ?.contactName ??
+          ""
         }
         onClose={() =>
           setResetPasswordSupplier(

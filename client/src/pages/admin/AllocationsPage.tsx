@@ -10,12 +10,6 @@ import {
   Button,
   CircularProgress,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
 } from "@mui/material";
 
@@ -184,7 +178,9 @@ export default function AllocationsPage() {
     return () => {
       controller.abort();
     };
-  }, [loadData]);
+  }, [
+    loadData,
+  ]);
 
   function handleSaved() {
     setIsLoading(true);
@@ -199,7 +195,6 @@ export default function AllocationsPage() {
         mx: "auto",
       }}
     >
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -262,7 +257,6 @@ export default function AllocationsPage() {
         </Alert>
       )}
 
-      {/* Helpful summary */}
       <Paper
         sx={{
           p: 2.5,
@@ -285,7 +279,6 @@ export default function AllocationsPage() {
         </Typography>
       </Paper>
 
-      {/* Allocation history */}
       <Paper
         sx={{
           overflow: "hidden",
@@ -293,7 +286,11 @@ export default function AllocationsPage() {
       >
         <Box
           sx={{
-            px: 3,
+            px: {
+              xs: 2,
+              md: 3,
+            },
+
             py: 2.5,
           }}
         >
@@ -323,6 +320,7 @@ export default function AllocationsPage() {
               minHeight: 300,
 
               display: "flex",
+
               alignItems:
                 "center",
 
@@ -337,6 +335,7 @@ export default function AllocationsPage() {
           <Box
             sx={{
               p: 6,
+
               textAlign:
                 "center",
             }}
@@ -357,73 +356,167 @@ export default function AllocationsPage() {
             </Typography>
           </Box>
         ) : (
-          <TableContainer>
-            <Table
-              sx={{
-                minWidth: 1000,
-              }}
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell>
-                    ספק
-                  </TableCell>
+          <Box
+            sx={{
+              display: "grid",
 
-                  <TableCell>
-                    שעון
-                  </TableCell>
+              gridTemplateColumns: {
+                xs:
+                  "1fr",
 
-                  <TableCell>
-                    כמות
-                  </TableCell>
+                sm:
+                  "repeat(2, minmax(0, 1fr))",
 
-                  <TableCell>
-                    מחיר לספק
-                  </TableCell>
+                lg:
+                  "repeat(3, minmax(0, 1fr))",
+              },
 
-                  <TableCell>
-                    מחיר מינימלי
-                  </TableCell>
+              gap: 2.5,
 
-                  <TableCell>
-                    תאריך
-                  </TableCell>
+              px: {
+                xs: 2,
+                md: 3,
+              },
 
-                  <TableCell>
-                    הערות
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+              pb: 3,
+            }}
+          >
+            {allocations.map(
+              (
+                allocation,
+              ) => {
+                const primaryImage =
+                  allocation.watch
+                    .displayImageUrl ??
+                  allocation.watch
+                    .displayImageUrls?.[0] ??
+                  allocation.watch
+                    .imageUrls?.[0] ??
+                  allocation.watch
+                    .imageUrl;
 
-              <TableBody>
-                {allocations.map(
-                  (allocation) => (
-                    <TableRow
-                      key={
-                        allocation.id
-                      }
-                      hover
+                return (
+                  <Paper
+                    key={
+                      allocation.id
+                    }
+                    variant="outlined"
+                    sx={{
+                      overflow:
+                        "hidden",
+
+                      borderRadius:
+                        3,
+
+                      display:
+                        "flex",
+
+                      flexDirection:
+                        "column",
+
+                      minWidth:
+                        0,
+
+                      bgcolor:
+                        "background.paper",
+
+                      transition:
+                        "transform 180ms ease, box-shadow 180ms ease",
+
+                      "&:hover": {
+                        transform:
+                          "translateY(-3px)",
+
+                        boxShadow:
+                          4,
+                      },
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: "100%",
+
+                        aspectRatio:
+                          "4 / 3",
+
+                        bgcolor:
+                          "background.default",
+
+                        borderBottom:
+                          "1px solid",
+
+                        borderColor:
+                          "divider",
+
+                        display:
+                          "flex",
+
+                        alignItems:
+                          "center",
+
+                        justifyContent:
+                          "center",
+
+                        overflow:
+                          "hidden",
+                      }}
                     >
-                      <TableCell>
-                        <Typography
-                          sx={{
-                            fontWeight:
-                              600,
-                          }}
-                        >
-                          {
-                            allocation
-                              .supplier
-                              .companyName
+                      {primaryImage ? (
+                        <Box
+                          component="img"
+                          src={
+                            primaryImage
                           }
-                        </Typography>
-                      </TableCell>
+                          alt={`${allocation.watch.brand} ${allocation.watch.model}`}
+                          loading="lazy"
+                          sx={{
+                            width:
+                              "100%",
 
-                      <TableCell>
+                            height:
+                              "100%",
+
+                            objectFit:
+                              "contain",
+
+                            p: 1.5,
+                          }}
+                        />
+                      ) : (
                         <Typography
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          אין תמונה
+                        </Typography>
+                      )}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        p: 2.25,
+
+                        display:
+                          "flex",
+
+                        flexDirection:
+                          "column",
+
+                        gap: 2,
+
+                        flexGrow:
+                          1,
+                      }}
+                    >
+                      <Box>
+                        <Typography
+                          variant="h6"
                           sx={{
                             fontWeight:
-                              500,
+                              700,
+
+                            lineHeight:
+                              1.3,
                           }}
                         >
                           {
@@ -439,67 +532,184 @@ export default function AllocationsPage() {
                         </Typography>
 
                         <Typography
-                          variant="caption"
+                          variant="body2"
                           color="text.secondary"
+                          sx={{
+                            mt: 0.5,
+                          }}
                         >
                           {
                             allocation
                               .watch
-                              .sku
+                              .name
                           }
                         </Typography>
-                      </TableCell>
+                      </Box>
 
-                      <TableCell>
-                        {
-                          allocation.quantity
-                        }{" "}
-                        יח׳
-                      </TableCell>
+                      <Box
+                        sx={{
+                          display:
+                            "grid",
 
-                      <TableCell>
-                        {formatCurrency(
-                          allocation.supplierCostPrice,
-                        )}
-                      </TableCell>
+                          gridTemplateColumns:
+                            "repeat(2, minmax(0, 1fr))",
 
-                      <TableCell>
+                          gap: 1.5,
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                          >
+                            ספק
+                          </Typography>
+
+                          <Typography
+                            sx={{
+                              fontWeight:
+                                600,
+                            }}
+                          >
+                            {
+                              allocation
+                                .supplier
+                                .contactName
+                            }
+                          </Typography>
+                        </Box>
+
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                          >
+                            כמות
+                          </Typography>
+
+                          <Typography
+                            sx={{
+                              fontWeight:
+                                600,
+                            }}
+                          >
+                            {
+                              allocation.quantity
+                            }{" "}
+                            יח׳
+                          </Typography>
+                        </Box>
+
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                          >
+                            מחיר לספק
+                          </Typography>
+
+                          <Typography
+                            sx={{
+                              fontWeight:
+                                600,
+                            }}
+                          >
+                            {formatCurrency(
+                              allocation.supplierCostPrice,
+                            )}
+                          </Typography>
+                        </Box>
+
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                          >
+                            מחיר מינימלי
+                          </Typography>
+
+                          <Typography
+                            sx={{
+                              fontWeight:
+                                700,
+
+                              color:
+                                "primary.dark",
+                            }}
+                          >
+                            {formatCurrency(
+                              allocation.requiredSalePrice,
+                            )}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          pt: 1.5,
+
+                          borderTop:
+                            "1px solid",
+
+                          borderColor:
+                            "divider",
+                        }}
+                      >
                         <Typography
-                          sx={{
-                            fontWeight:
-                              600,
+                          variant="caption"
+                          color="text.secondary"
+                        >
+                          תאריך הקצאה
+                        </Typography>
 
-                            color:
-                              "primary.dark",
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mt: 0.25,
                           }}
                         >
-                          {formatCurrency(
-                            allocation.requiredSalePrice,
+                          {formatDateTime(
+                            allocation.createdAt,
                           )}
                         </Typography>
-                      </TableCell>
+                      </Box>
 
-                      <TableCell>
-                        {formatDateTime(
-                          allocation.createdAt,
-                        )}
-                      </TableCell>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                        >
+                          הערות
+                        </Typography>
 
-                      <TableCell>
-                        {allocation.notes ||
-                          "—"}
-                      </TableCell>
-                    </TableRow>
-                  ),
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mt: 0.25,
+
+                            overflowWrap:
+                              "anywhere",
+                          }}
+                        >
+                          {
+                            allocation.notes ||
+                            "—"
+                          }
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Paper>
+                );
+              },
+            )}
+          </Box>
         )}
       </Paper>
 
       <AllocationDialog
-        open={dialogOpen}
+        open={
+          dialogOpen
+        }
         suppliers={
           suppliers
         }

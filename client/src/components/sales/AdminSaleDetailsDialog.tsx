@@ -66,13 +66,17 @@ export default function AdminSaleDetailsDialog({
       </DialogTitle>
 
       <DialogContent>
+        {/* Sale summary */}
         <Box
           sx={{
-            display: "grid",
+            display:
+              "grid",
 
             gridTemplateColumns: {
               xs: "1fr",
-              sm: "repeat(2, minmax(0, 1fr))",
+
+              sm:
+                "repeat(2, minmax(0, 1fr))",
             },
 
             gap: 2,
@@ -95,12 +99,14 @@ export default function AdminSaleDetailsDialog({
             <Typography
               sx={{
                 mt: 0.5,
-                fontWeight: 600,
+
+                fontWeight:
+                  600,
               }}
             >
               {
                 sale.supplier
-                  .companyName
+                  .contactName
               }
             </Typography>
 
@@ -135,7 +141,9 @@ export default function AdminSaleDetailsDialog({
             <Typography
               sx={{
                 mt: 0.5,
-                fontWeight: 600,
+
+                fontWeight:
+                  600,
               }}
             >
               {formatDateTime(
@@ -161,9 +169,12 @@ export default function AdminSaleDetailsDialog({
               variant="h6"
               sx={{
                 mt: 0.5,
+
                 color:
                   "primary.dark",
-                fontWeight: 600,
+
+                fontWeight:
+                  600,
               }}
             >
               {formatCurrency(
@@ -215,11 +226,17 @@ export default function AdminSaleDetailsDialog({
           </Paper>
         </Box>
 
+        {/* Sale counts */}
         <Box
           sx={{
-            display: "flex",
+            display:
+              "flex",
+
             gap: 3,
             mb: 3,
+
+            flexWrap:
+              "wrap",
           }}
         >
           <Typography
@@ -253,12 +270,15 @@ export default function AdminSaleDetailsDialog({
           variant="h6"
           sx={{
             mb: 2,
-            fontWeight: 600,
+
+            fontWeight:
+              600,
           }}
         >
           פריטי המכירה
         </Typography>
 
+        {/* Sale items */}
         <TableContainer
           component={Paper}
           variant="outlined"
@@ -319,7 +339,7 @@ export default function AdminSaleDetailsDialog({
                       >
                         {
                           item.watch
-                            .sku
+                            .name
                         }
                       </Typography>
                     </TableCell>
@@ -364,6 +384,7 @@ export default function AdminSaleDetailsDialog({
           </Table>
         </TableContainer>
 
+        {/* Notes */}
         {sale.notes && (
           <Box
             sx={{

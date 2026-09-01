@@ -25,6 +25,10 @@ enum InventoryTransactionType {
   ADJUSTMENT
 }
 
+enum BusinessAuditEventType {
+  WATCH_DELETED
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   username     String   @unique @db.VarChar(50)
@@ -41,6 +45,10 @@ model User {
   createdStockAllocations      StockAllocation[]      @relation("StockAllocationCreatedBy")
   createdInventoryTransactions InventoryTransaction[] @relation("InventoryTransactionCreatedBy")
 
+  deletedWatches Watch[] @relation("WatchDeletedBy")
+
+  businessAuditLogs BusinessAuditLog[] @relation("BusinessAuditLogCreatedBy")
+
   @@index([role, isActive])
 }
 
@@ -48,7 +56,6 @@ model Supplier {
   id     String @id @default(uuid()) @db.Uuid
   userId String @unique @db.Uuid
 
-  companyName String  @db.VarChar(150)
   contactName String  @db.VarChar(150)
   phone       String? @db.VarChar(30)
   address     String?
@@ -64,19 +71,22 @@ model Supplier {
   sales                 Sale[]
   inventoryTransactions InventoryTransaction[]
 
-  @@index([companyName])
+  @@index([contactName])
 }
 
 model Watch {
-  id  String @id @default(uuid()) @db.Uuid
-  sku String @unique @db.VarChar(64)
+  id String @id @default(uuid()) @db.Uuid
 
   brand String @db.VarChar(100)
   model String @db.VarChar(150)
   name  String @db.VarChar(200)
 
   description String?
-  imageUrl    String? @db.VarChar(2048)
+
+  imageUrl String? @db.VarChar(2048)
+
+  imageUrls      String[] @default([])
+  imagePublicIds String[] @default([])
 
   adminCostPrice       Decimal @db.Decimal(12, 2)
   defaultSupplierPrice Decimal @db.Decimal(12, 2)
@@ -84,8 +94,14 @@ model Watch {
 
   isActive Boolean @default(true)
 
+  deletedAt       DateTime? @db.Timestamptz(3)
+  deletedByUserId String?   @db.Uuid
+  deletionReason  String?
+
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  deletedByUser User? @relation("WatchDeletedBy", fields: [deletedByUserId], references: [id], onDelete: Restrict)
 
   warehouseInventory    WarehouseInventory?
   supplierInventories   SupplierInventory[]
@@ -93,8 +109,11 @@ model Watch {
   saleItems             SaleItem[]
   inventoryTransactions InventoryTransaction[]
 
+  businessAuditLogs BusinessAuditLog[]
+
   @@index([brand])
   @@index([isActive])
+  @@index([deletedAt])
 }
 
 model WarehouseInventory {
@@ -215,4 +234,24 @@ model InventoryTransaction {
   @@index([supplierId, createdAt])
   @@index([watchId, createdAt])
   @@index([type, createdAt])
+}
+
+model BusinessAuditLog {
+  id String @id @default(uuid()) @db.Uuid
+
+  eventType BusinessAuditEventType
+
+  watchId         String? @db.Uuid
+  createdByUserId String  @db.Uuid
+
+  note String
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  watch         Watch? @relation(fields: [watchId], references: [id], onDelete: Restrict)
+  createdByUser User   @relation("BusinessAuditLogCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([eventType, createdAt])
+  @@index([watchId, createdAt])
+  @@index([createdByUserId, createdAt])
 }

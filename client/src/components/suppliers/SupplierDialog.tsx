@@ -49,11 +49,6 @@ export default function SupplierDialog({
     supplier !== null;
 
   const [
-    companyName,
-    setCompanyName,
-  ] = useState("");
-
-  const [
     contactName,
     setContactName,
   ] = useState("");
@@ -98,14 +93,18 @@ export default function SupplierDialog({
     setIsSaving,
   ] = useState(false);
 
+  /*
+   * Initializes the form whenever the dialog opens.
+   *
+   * When editing an existing supplier, the current
+   * supplier details are loaded into the form.
+   *
+   * When creating a new supplier, all fields start empty.
+   */
   useEffect(() => {
     if (!open) {
       return;
     }
-
-    setCompanyName(
-      supplier?.companyName ?? "",
-    );
 
     setContactName(
       supplier?.contactName ?? "",
@@ -140,26 +139,32 @@ export default function SupplierDialog({
   ]);
 
   async function handleSave() {
-    const normalizedCompanyName =
-      companyName.trim();
-
     const normalizedContactName =
       contactName.trim();
 
-    if (
-      !normalizedCompanyName ||
-      !normalizedContactName
-    ) {
+    /*
+     * Contact name is the main supplier name
+     * used throughout the system.
+     */
+    if (!normalizedContactName) {
       setError(
-        "יש להזין שם חברה ושם איש קשר",
+        "יש להזין שם איש קשר",
       );
 
       return;
     }
 
+    /*
+     * Username and password are required only
+     * when creating a new supplier.
+     */
     if (!isEdit) {
+      const normalizedUsername =
+        username.trim();
+
       if (
-        username.trim().length < 3
+        normalizedUsername.length <
+        3
       ) {
         setError(
           "שם המשתמש חייב להכיל לפחות 3 תווים",
@@ -168,7 +173,10 @@ export default function SupplierDialog({
         return;
       }
 
-      if (password.length < 8) {
+      if (
+        password.length <
+        8
+      ) {
         setError(
           "הסיסמה חייבת להכיל לפחות 8 תווים",
         );
@@ -182,33 +190,40 @@ export default function SupplierDialog({
 
     try {
       if (supplier) {
+        /*
+         * Update existing supplier.
+         *
+         * Username and password are not changed
+         * from this dialog.
+         */
         await updateSupplier(
           supplier.id,
           {
-            companyName:
-              normalizedCompanyName,
-
             contactName:
               normalizedContactName,
 
             email:
-              email.trim() || null,
+              email.trim() ||
+              null,
 
             phone:
-              phone.trim() || null,
+              phone.trim() ||
+              null,
 
             address:
-              address.trim() || null,
+              address.trim() ||
+              null,
 
             notes:
-              notes.trim() || null,
+              notes.trim() ||
+              null,
           },
         );
       } else {
+        /*
+         * Create a new supplier account.
+         */
         await createSupplier({
-          companyName:
-            normalizedCompanyName,
-
           contactName:
             normalizedContactName,
 
@@ -239,9 +254,12 @@ export default function SupplierDialog({
       onClose();
     } catch (error) {
       if (
-        error instanceof HttpError
+        error instanceof
+        HttpError
       ) {
-        setError(error.message);
+        setError(
+          error.message,
+        );
       } else {
         setError(
           "לא ניתן לשמור את פרטי הספק",
@@ -283,18 +301,6 @@ export default function SupplierDialog({
           )}
 
           <TextField
-            label="שם החברה"
-            value={companyName}
-            onChange={(event) =>
-              setCompanyName(
-                event.target.value,
-              )
-            }
-            required
-            fullWidth
-          />
-
-          <TextField
             label="שם איש קשר"
             value={contactName}
             onChange={(event) =>
@@ -317,6 +323,11 @@ export default function SupplierDialog({
             disabled={isEdit}
             required={!isEdit}
             fullWidth
+            helperText={
+              isEdit
+                ? "לא ניתן לשנות את שם המשתמש מכאן"
+                : "לפחות 3 תווים"
+            }
           />
 
           {!isEdit && (

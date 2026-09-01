@@ -1,7 +1,6 @@
 export type SupplierListItem = {
   id: string;
 
-  companyName: string;
   contactName: string;
 
   phone: string | null;
@@ -24,7 +23,6 @@ export type SupplierListItem = {
 export type SupplierDetails = {
   id: string;
 
-  companyName: string;
   contactName: string;
 
   phone: string | null;
@@ -49,11 +47,12 @@ export type SupplierDetails = {
 
     watch: {
       id: string;
-      sku: string;
       brand: string;
       model: string;
       name: string;
       imageUrl: string | null;
+      imageUrls: string[];
+      isActive: boolean;
     };
   }>;
 
@@ -69,7 +68,6 @@ export type CreateSupplierInput = {
 
   email?: string;
 
-  companyName: string;
   contactName: string;
 
   phone?: string;
@@ -80,7 +78,6 @@ export type CreateSupplierInput = {
 export type UpdateSupplierInput = {
   email?: string | null;
 
-  companyName?: string;
   contactName?: string;
 
   phone?: string | null;
